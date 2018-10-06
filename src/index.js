@@ -8,8 +8,8 @@ import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
 
-function makeCharacter(level, type) {
-    getStats(level, archetypes[type].modifiers)
+function makeCreatureStats(level, type) {
+    return getStats(level, archetypes[type].modifiers)
 }
 
 var config = {
@@ -33,7 +33,7 @@ var config = {
     }]
 };
 
-var creatureGroup;
+let creatureGroup;
 let displayStats = [];
 const players = new Map();
 
@@ -61,9 +61,25 @@ function create() {
             player.playerNumber = players.size;
             players.set(pad, joinedPlayerAndMovement);
             displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-            creatureGroup.collidesWith(player);
+            addNewCreatureGroup(this);
         }
     }, this)
+
+    this.input.gamepad.on('down', function (pad, button, index) {
+        if (button.index === 2) {
+            if (!creatureGroup) return;
+            let creatureGroupChildren = creatureGroup.renderGroup.getChildren();
+            let removalIndices = [];
+            for (let [index, child] of creatureGroupChildren.entries()) {
+                removalIndices.push(index);
+            };
+            removalIndices = removalIndices.reverse();
+            removalIndices.forEach(index => {
+                creatureGroupChildren[index].destroy();
+                Phaser.Utils.Array.Remove(creatureGroup.children, creatureGroup.children[index]);
+            })
+        }
+    })
 
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
@@ -74,7 +90,33 @@ function create() {
 
     // add animations
     addAnimations(this);
+}
 
+function update() {
+    if (!players.size) {
+        return
+    }
+    players.forEach(updatePlayer)
+}
+
+function updatePlayer({ player, movement }, gamepad) {
+    movement.checkMovement(gamepad);
+    if (creatureGroup) {
+        creatureGroup.moveTowards(player);
+    }
+
+    //display
+    displayStats[player.playerNumber].setText([
+        `Player ${player.playerNumber}`,
+        `Level: ${player.stats.level - 5}`,
+        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+        `Speed: ${player.stats.speed}`,
+        `Attack: ${player.stats.attack}`,
+        player.archetype ? `Archetype: ${player.archetype}` : null,
+    ]);
+}
+
+function addNewCreatureGroup(scene) {
     let creatures = [];
 
     for (var i = 0; i < 10; i++) {
@@ -87,32 +129,10 @@ function create() {
             attack: Phaser.Math.Between(1, 100) / 100
         }
 
-        creatures.push(new Creature(this, x, y, stats));
+        creatures.push(new Creature(scene, x, y, stats, creatures.length));
     }
 
-    creatureGroup = new DynamicGroup(this, creatures);
-    creatureGroup.collidesWith(horizontalWalls);
-    creatureGroup.collidesWith(verticalWalls);
-}
-
-function update() {
-    if (!players.size) {
-        return
-    }
-    players.forEach(updatePlayer)
-}
-
-function updatePlayer({ player, movement }, gamepad) {
-    movement.checkMovement(gamepad);
-    creatureGroup.moveTowards(player);
-
-    //display
-    displayStats[player.playerNumber].setText([
-        `Player ${player.playerNumber}`,
-        `Level: ${player.stats.level - 5}`,
-        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-        `Speed: ${player.stats.speed}`,
-        `Attack: ${player.stats.attack}`,
-        player.archetype ? `Archetype: ${player.archetype}` : null,
-    ]);
+    creatureGroup = new DynamicGroup(scene, creatures);
+    scene.data.get('walls').forEach(wall => creatureGroup.collidesWith(wall));
+    scene.data.get('players').forEach(player => creatureGroup.collidesWith(player));
 }

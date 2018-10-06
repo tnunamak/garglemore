@@ -29,4 +29,30 @@ export default class DynamicGroup{
 			child.moveTowards(renderObj);
 		}
 	}
+
+	isEveryChildDestroyed() {
+		let resetGroup = true;
+		
+		let renderGroupChildren = this.renderGroup.getChildren()
+		let removalIndices = [];
+		for (let [index, child] of renderGroupChildren.entries()) {
+			let childIsHealthy = child.isHealthy();
+			if (childIsHealthy) {
+				resetGroup = false;
+				console.log('all good')
+				break;
+			}
+			
+			// if child is NOT healthy, destroy
+			removalIndices.push(index);
+		};
+
+		removalIndices = removalIndices.reverse();
+		removalIndices.forEach(index => {
+				renderGroupChildren[index].destroy();
+				Phaser.Utils.Array.Remove(creatureGroup.children, creatureGroup.children[index]);
+		})
+
+		return resetGroup;
+	}
 }

@@ -1,9 +1,9 @@
 const constants = require('../constants.js').default;
 
 // How strong the leveling effect is.
-const LEVEL_SCALING_FACTOR = 0.01
+const LEVEL_SCALING_FACTOR = 0.05
 // How random individual stats can be.
-const FUZZ_VARIANCE = 0.1
+const FUZZ_VARIANCE = 0.05
 
 const statBases = require('./statBases')
 const normalDistribution = require('./normalNumbers.js')
