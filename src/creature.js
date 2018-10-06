@@ -8,6 +8,7 @@ export default class Creature{
 		this.stats 	= stats;
 		this.scale 	= this.getScaleFromStats(stats);
 		this.sprite.setScale(this.scale);
+		this.creatureIndex = creatureIndex;
 	}
 
 	getScaleFromStats(statVals){	
