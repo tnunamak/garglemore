@@ -2,11 +2,12 @@ import 'phaser';
 
 import archetypes from './archetypes'
 import getStats from './stats'
-import { createPlayer, joinPlayer } from './player/player-create.js'
+import { joinPlayer } from './player/player-create.js'
 import { addAnimations } from './animations.js'
 import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
+import Bullet from './bullet'
 
 function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
@@ -35,8 +36,8 @@ var config = {
 
 var creatureGroup;
 let displayStats = [];
-const players = new Map();
-
+let bullets;
+let players = new Map();
 let game = new Phaser.Game(config);
 
 function preload() {
@@ -45,6 +46,8 @@ function preload() {
     this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
+
+    this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
 }
 
 function create() {
@@ -93,27 +96,33 @@ function create() {
     creatureGroup = new DynamicGroup(this, creatures);
     creatureGroup.collidesWith(horizontalWalls);
     creatureGroup.collidesWith(verticalWalls);
+
+    bullets = this.add.group({
+      classType: Bullet,
+      maxSize: 100,
+      runChildUpdate: true
+    })
 }
 
-function update() {
+function update(time, delta) {
     if (!players.size) {
         return
     }
-    players.forEach(updatePlayer)
+    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
 }
 
-function updatePlayer({ player, movement }, gamepad) {
+function updatePlayer({ player, movement }, gamepad, time, delta) {
   movement.updateGamepadMovement(gamepad);
   creatureGroup.moveTowards(player);
 
   //display
   displayStats[player.playerNumber].setText([
-      `Player ${player.playerNumber}`,
-      `Level: ${player.stats.level - 5}`,
-      `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-      `Speed: ${player.stats.speed}`,
-      `Attack: ${player.stats.attack}`,
-      player.archetype ? `Archetype: ${player.archetype}` : null,
+    `Player ${player.playerNumber}`,
+    `Level: ${player.stats.level - 5}`,
+    `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+    `Speed: ${player.stats.speed}`,
+    `Attack: ${player.stats.attack}`,
+    player.archetype ? `Archetype: ${player.archetype}` : null,
   ]);
 
   if (gamepad.A && !player.dash && player.canDash !== false) {
@@ -131,5 +140,16 @@ function updatePlayer({ player, movement }, gamepad) {
     const DASH_FACTOR = 5
     let { speed, angle } = player.dash
     movement.updateMovement(speed * DASH_FACTOR, angle)
+  }
+  // abstract out gun cooldown (150)
+  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
+    let bullet = bullets.get()
+    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
+
+    if (bullet) {
+      player.lastFired = time
+      player.lastFireAngle = angle
+      bullet.fire(player.x, player.y, angle)
+    }
   }
 }
