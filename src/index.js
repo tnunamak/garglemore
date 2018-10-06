@@ -14,6 +14,9 @@ var config = {
     type: Phaser.AUTO,
     width: 1200,
     height: 780,
+    input: {
+      gamepad: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -32,38 +35,58 @@ let player;
 let stars;
 let platforms;
 var creatureGroup;
-let playerMovement;
 let horizontalWalls;
 let verticalWalls;
 
 let game = new Phaser.Game(config);
 
 function preload() {
-  this.load.image('star', 'public/assets/star.png');
-  this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
-  this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
-  this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
-  this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
+    this.load.image('star', 'public/assets/star.png');
+    this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
+    this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
+    this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
 }
+
+function joinPlayer (pad) {
+  player = this.physics.add.sprite(100, 450, 'dude');
+
+  let movement = new Cursors(this, player, pad);
+  player.setCollideWorldBounds(true);
+
+  // physics interactions
+  this.physics.add.collider(player, horizontalWalls);
+  this.physics.add.collider(player, verticalWalls);
+  creatureGroup.collidesWith(player);
+
+  this.physics.add.overlap(player, stars, collectStar, null, this);
+
+
+  return {
+    player,
+    movement
+  }
+}
+
+const players = new Map()
 
 function create() {
     //Create all the things
     horizontalWalls = this.physics.add.staticGroup();
     verticalWalls = this.physics.add.staticGroup();
+    this.input.gamepad.on('down', function (pad, button, index) {
+        if (!players.has(pad)) {
+          players.set(pad, joinPlayer.bind(this)(pad))
+        }
+      }, this)
 
-    player = this.physics.add.sprite(100, 450, 'dude');
-    
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
         horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
         verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
-    
-    // player
-    playerMovement = new Cursors(this, player);
-    player.setCollideWorldBounds(true);
-
+   
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -96,14 +119,6 @@ function create() {
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
 
     });
-
-    // physics interactions
-    this.physics.add.collider(player, horizontalWalls);
-    this.physics.add.collider(player, verticalWalls);
-    this.physics.add.collider(stars, horizontalWalls);
-
-    this.physics.add.overlap(player, stars, collectStar, null, this);
-
     this.anims.create({
         key: 'zombie-down',
         frames: this.anims.generateFrameNumbers('zombie', { start: 0, end: 2 }),
@@ -150,12 +165,21 @@ function create() {
     creatureGroup = new DynamicGroup(this, creatures);
     creatureGroup.collidesWith(horizontalWalls);
     creatureGroup.collidesWith(verticalWalls);
-    creatureGroup.collidesWith(player);
 }
 
 function update() {
-    creatureGroup.moveTowards(player);
-    playerMovement.checkMovement();
+  if (!players.size) {
+    return
+  }
+  players.forEach(updatePlayer)
+}
+
+function updatePlayer ({ player, movement }, gamepad) {
+  movement.checkMovement(gamepad);
+  creatureGroup.moveTowards(player);
+  //if (gamepad.A && player.body.velocity.y >= 0) {
+    //player.setVelocityY(-330);
+  //}
 }
 
 function collectStar(player, star) {
