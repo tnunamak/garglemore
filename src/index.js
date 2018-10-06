@@ -1,9 +1,10 @@
 import 'phaser';
 
-import archetypes from './archetypes'
-import getStats from './stats'
+import archetypes   from './archetypes'
+import getStats     from './stats'
 
-import Creature from './creature';
+import Creature         from './creature';
+import DynamicGroup    from './dynamicGroup';
 
 function makeCharacter (level, type) {
   getStats(level, archetypes[type].modifiers)
@@ -31,7 +32,9 @@ var player;
 var stars;
 var platforms;
 var cursors;
-var floorWalls;
+var creatureGroup;
+var horizontalWalls;
+var verticalWalls;
 
 var game = new Phaser.Game(config);
 
@@ -41,9 +44,10 @@ function preload ()
     // this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'public/assets/star.png');
     // this.load.image('bomb', 'assets/bomb.png');
-    this.load.image('basic_wall', 'public/assets/images/basic-wall-30x60.png')
-    this.load.image('hotdog',   'assets/hotdog.png');
-    this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
+    this.load.image('vertical_wall',  'public/assets/images/vertical-wall-60x30.png')
+    this.load.spritesheet('zombie',   'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
+    this.load.spritesheet('dude',     'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create() {
@@ -55,7 +59,6 @@ function create() {
     //     repeat: 10,
     //     setXY: { x: 30, y: 45 },
     // })
-
 
     player = this.physics.add.sprite(100, 450, 'dude');
 
@@ -101,18 +104,25 @@ function create() {
 
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
-    
+    let creatures = [];
+
     for (var i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(100, 600);
-        const y = Phaser.Math.Between(100, 600);
+        const x = Phaser.Math.Between(50, 1150);
+        const y = Phaser.Math.Between(50, 730);
+
         let stats = {
           health: Phaser.Math.Between(1, 100) / 100,
           speed: Phaser.Math.Between(1, 100) / 100,
           attack: Phaser.Math.Between(1, 100) / 100
         }
 
-        let creature = new Creature(this, x, y, stats);
+        creatures.push(new Creature(this, x, y, stats));
     }
+
+    creatureGroup = new DynamicGroup(this, creatures);
+    creatureGroup.collidesWith(horizontalWalls);
+    creatureGroup.collidesWith(verticalWalls);
+    creatureGroup.collidesWith(player);
 }
 
 function update() {
@@ -135,6 +145,7 @@ function update() {
     if (cursors.up.isDown) {
         player.setVelocityY(-330);
     }
+    creatureGroup.moveTowards(player);
 }
 
 function collectStar(player, star) {
