@@ -2,6 +2,7 @@
 
 const webpack = require('webpack');
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
 
@@ -15,10 +16,10 @@ module.exports = {
 
     module: {
         rules: [
-          {
-            test: [ /\.vert$/, /\.frag$/ ],
-            use: 'raw-loader'
-          }
+            {
+                test: [/\.vert$/, /\.frag$/],
+                use: 'raw-loader',
+            }
         ]
     },
 
@@ -26,7 +27,14 @@ module.exports = {
         new webpack.DefinePlugin({
             'CANVAS_RENDERER': JSON.stringify(true),
             'WEBGL_RENDERER': JSON.stringify(true)
-        })
-    ]
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'index.html',
+            template: 'index.html'
+        }),
+        new webpack.NamedModulesPlugin(),
+        new webpack.HotModuleReplacementPlugin()
+    ],
+    devtool: 'eval-source-map'
 
 };
