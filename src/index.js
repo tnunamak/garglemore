@@ -2,9 +2,10 @@ import 'phaser';
 
 import archetypes from './archetypes'
 import getStats from './stats'
-import Creature         from './creature';
+import { createPlayer, joinPlayer } from './player/player-create.js'
+import Creature from './creature';
 import Cursors from './player/player-movement.js'
-import DynamicGroup    from './dynamicGroup';
+import DynamicGroup from './dynamicGroup';
 
 function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
@@ -15,7 +16,7 @@ var config = {
     width: 1200,
     height: 780,
     input: {
-      gamepad: true
+        gamepad: true
     },
     physics: {
         default: 'arcade',
@@ -31,12 +32,13 @@ var config = {
     }]
 };
 
-let player;
 let stars;
 let platforms;
 var creatureGroup;
 let horizontalWalls;
 let verticalWalls;
+let displayStats = [];
+const players = new Map();
 
 let game = new Phaser.Game(config);
 
@@ -48,37 +50,23 @@ function preload() {
     this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
 }
 
-function joinPlayer (pad) {
-  player = this.physics.add.sprite(100, 450, 'dude');
-
-  let movement = new Cursors(this, player, pad);
-  player.setCollideWorldBounds(true);
-
-  // physics interactions
-  this.physics.add.collider(player, horizontalWalls);
-  this.physics.add.collider(player, verticalWalls);
-  creatureGroup.collidesWith(player);
-
-  this.physics.add.overlap(player, stars, collectStar, null, this);
-
-
-  return {
-    player,
-    movement
-  }
-}
-
-const players = new Map()
-
 function create() {
-    //Create all the things
+    this.data.set('players', players);
     horizontalWalls = this.physics.add.staticGroup();
     verticalWalls = this.physics.add.staticGroup();
+    this.data.set('walls', [horizontalWalls, verticalWalls])
+
+    // player join listener
     this.input.gamepad.on('down', function (pad, button, index) {
         if (!players.has(pad)) {
-          players.set(pad, joinPlayer.bind(this)(pad))
+            const joinedPlayerAndMovement = joinPlayer.bind(this)(pad);
+            const { player } = joinedPlayerAndMovement;
+            player.playerNumber = players.size;
+            players.set(pad, joinedPlayerAndMovement);
+            displayStats.push(this.add.text(50, 30 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
+            creatureGroup.collidesWith(player);
         }
-      }, this)
+    }, this)
 
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
@@ -86,7 +74,7 @@ function create() {
         verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
-   
+
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -107,18 +95,6 @@ function create() {
         repeat: -1
     });
 
-    // stars
-    stars = this.physics.add.group({
-        key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
-    });
-
-    stars.children.iterate(function (child) {
-
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-
-    });
     this.anims.create({
         key: 'zombie-down',
         frames: this.anims.generateFrameNumbers('zombie', { start: 0, end: 2 }),
@@ -154,9 +130,9 @@ function create() {
         const y = Phaser.Math.Between(50, 730);
 
         let stats = {
-          health: Phaser.Math.Between(1, 100) / 100,
-          speed: Phaser.Math.Between(1, 100) / 100,
-          attack: Phaser.Math.Between(1, 100) / 100
+            health: Phaser.Math.Between(1, 100) / 100,
+            speed: Phaser.Math.Between(1, 100) / 100,
+            attack: Phaser.Math.Between(1, 100) / 100
         }
 
         creatures.push(new Creature(this, x, y, stats));
@@ -168,20 +144,24 @@ function create() {
 }
 
 function update() {
-  if (!players.size) {
-    return
-  }
-  players.forEach(updatePlayer)
+    if (!players.size) {
+        return
+    }
+    players.forEach(updatePlayer)
 }
 
-function updatePlayer ({ player, movement }, gamepad) {
-  movement.checkMovement(gamepad);
-  creatureGroup.moveTowards(player);
-  //if (gamepad.A && player.body.velocity.y >= 0) {
+function updatePlayer({ player, movement }, gamepad) {
+    movement.checkMovement(gamepad);
+    creatureGroup.moveTowards(player);
+
+    //display
+    displayStats[player.playerNumber].setText([
+        `Level: ${player.stats.level - 5}`,
+        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+        // 'Archetype: ' + this.data.get('archetype')
+    ]);
+
+    //if (gamepad.A && player.body.velocity.y >= 0) {
     //player.setVelocityY(-330);
-  //}
-}
-
-function collectStar(player, star) {
-    star.disableBody(true, true);
+    //}
 }
