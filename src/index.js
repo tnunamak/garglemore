@@ -104,6 +104,34 @@ function create() {
 
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
+    this.anims.create({
+        key: 'zombie-down',
+        frames: this.anims.generateFrameNumbers('zombie', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'zombie-left',
+        frames: this.anims.generateFrameNumbers('zombie', { start: 3, end: 5 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'zombie-right',
+        frames: this.anims.generateFrameNumbers('zombie', { start: 6, end: 8 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'zombie-up',
+        frames: this.anims.generateFrameNumbers('zombie', { start: 9, end: 11 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
     let creatures = [];
 
     for (var i = 0; i < 10; i++) {
