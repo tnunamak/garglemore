@@ -1,10 +1,13 @@
 import 'phaser';
+import constants from '../constants';
 
+const { baseSpeed } = constants;
 export default class playerMovement {
   constructor(scene, player) {
     this.scene = scene;
     this.player = player;
     this.cursors = scene.input.keyboard.createCursorKeys();
+    this.playerSpeed = this.player.stats.speed * constants.baseSpeed;
   }
 
   checkMovement (gamepad) {
@@ -16,12 +19,11 @@ export default class playerMovement {
     }
   }
 
-
   getGamepadMovement (gamepad) {
     let {x, y} = gamepad.leftStick
     // TODO speed depend on player's speed attribute
     return {
-      speed: 300 * gamepad.leftStick.length(),
+      speed: this.playerSpeed * gamepad.leftStick.length(),
       angle: gamepad.leftStick.angle()
     }
   }
@@ -35,19 +37,19 @@ export default class playerMovement {
     this.player.setVelocityX(speed * Math.cos(angle));
     this.player.setVelocityY(speed * Math.sin(angle));
 
-    let direction = 'right'
+    let direction = 'turn'
     angle = angle + (Math.PI / 4)
     if (angle >= 0 && angle < Math.PI / 2) {
       direction = 'right'
     }
     else if (angle >= Math.PI / 2 && angle < Math.PI) {
-      direction = 'up'
+      direction = 'turn'
     }
     else if (angle >= Math.PI && angle < 3 * Math.PI / 2) {
       direction = 'left'
     }
     else {
-      direction = 'down'
+      direction = 'turn'
     }
 
     try {
@@ -61,20 +63,20 @@ export default class playerMovement {
   // deprecated
   oldCheckMovement () {
     if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-160);
+      this.player.setVelocityX(-this.playerSpeed);
 
       this.player.anims.play('left', true);
     }
     if (this.cursors.right.isDown) {
-      this.player.setVelocityX(160);
+      this.player.setVelocityX(this.playerSpeed);
 
       this.player.anims.play('right', true);
     }
     if (this.cursors.down.isDown) {
-      this.player.setVelocityY(160);
+      this.player.setVelocityY(this.playerSpeed);
     }
     if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-160);
+      this.player.setVelocityY(-this.playerSpeed);
     }
     if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
       this.player.setVelocityX(0);
