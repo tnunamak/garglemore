@@ -1,12 +1,11 @@
-import 'Phaser';
 import getStats from '../stats'
 import archetypes from '../archetypes.js'
 import Cursors from './player-movement.js'
 
-
 export function createPlayer (scene, archetype = archetypes.shooter) {
   const startingLevel = 6;
-  let player = scene.physics.add.sprite(100, 450, 'dude');
+  let player = scene.physics.add.sprite(scene.game.canvas.width / 2, scene.game.canvas.height / 2, 'dude')
+    .setOrigin(0.5, 0.5);
   player.stats = getStats(startingLevel, archetype.modifiers)
   player.stats.maxHealth = player.stats.health;
   player.stats.level = startingLevel;

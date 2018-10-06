@@ -2,10 +2,11 @@ import 'phaser';
 
 import archetypes from './archetypes'
 import getStats from './stats'
-import { createPlayer, joinPlayer } from './player/player-create.js'
+import { joinPlayer } from './player/player-create.js'
 import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
+import Bullet from './bullet'
 
 function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
@@ -38,8 +39,8 @@ var creatureGroup;
 let horizontalWalls;
 let verticalWalls;
 let displayStats = [];
-const players = new Map();
-
+let bullets;
+let players = new Map();
 let game = new Phaser.Game(config);
 
 function preload() {
@@ -48,6 +49,8 @@ function preload() {
     this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
+
+    this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
 }
 
 function create() {
@@ -141,25 +144,43 @@ function create() {
     creatureGroup = new DynamicGroup(this, creatures);
     creatureGroup.collidesWith(horizontalWalls);
     creatureGroup.collidesWith(verticalWalls);
+
+    bullets = this.add.group({
+      classType: Bullet,
+      maxSize: 100,
+      runChildUpdate: true
+    })
 }
 
-function update() {
+function update(time, delta) {
     if (!players.size) {
         return
     }
-    players.forEach(updatePlayer)
+    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
 }
 
-function updatePlayer({ player, movement }, gamepad) {
-    movement.checkMovement(gamepad);
-    creatureGroup.moveTowards(player);
+function updatePlayer({ player, movement }, gamepad, time, delta) {
+  movement.checkMovement(gamepad);
+  creatureGroup.moveTowards(player);
 
-    //display
-    displayStats[player.playerNumber].setText([
-        `Level: ${player.stats.level - 5}`,
-        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-        // 'Archetype: ' + this.data.get('archetype')
-    ]);
+  //display
+  displayStats[player.playerNumber].setText([
+    `Level: ${player.stats.level - 5}`,
+    `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+    // 'Archetype: ' + this.data.get('archetype')
+  ]);
+
+  // abstract out gun cooldown (150)
+  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
+    let bullet = bullets.get()
+    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
+
+    if (bullet) {
+      player.lastFired = time
+      player.lastFireAngle = angle
+      bullet.fire(player.x, player.y, angle)
+    }
+  }
 
     //if (gamepad.A && player.body.velocity.y >= 0) {
     //player.setVelocityY(-330);
