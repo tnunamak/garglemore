@@ -35,8 +35,6 @@ var config = {
 let stars;
 let platforms;
 var creatureGroup;
-let horizontalWalls;
-let verticalWalls;
 let displayStats = [];
 const players = new Map();
 
@@ -52,8 +50,8 @@ function preload() {
 
 function create() {
     this.data.set('players', players);
-    horizontalWalls = this.physics.add.staticGroup();
-    verticalWalls = this.physics.add.staticGroup();
+    const horizontalWalls = this.physics.add.staticGroup();
+    const verticalWalls = this.physics.add.staticGroup();
     this.data.set('walls', [horizontalWalls, verticalWalls])
 
     // player join listener
