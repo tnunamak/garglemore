@@ -37,7 +37,7 @@ let platforms;
 var creatureGroup;
 let horizontalWalls;
 let verticalWalls;
-// let displayStats = [];
+let displayStats = [];
 const players = new Map();
 
 let game = new Phaser.Game(config);
@@ -63,7 +63,7 @@ function create() {
             const { player } = joinedPlayerAndMovement;
             player.playerNumber = players.size;
             players.set(pad, joinedPlayerAndMovement);
-            // displayStats.push(this.add.text(50, 50 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
+            displayStats.push(this.add.text(50, 30 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
             creatureGroup.collidesWith(player);
         }
     }, this)
@@ -155,11 +155,11 @@ function updatePlayer({ player, movement }, gamepad) {
     creatureGroup.moveTowards(player);
 
     //display
-    // displayStats[player.playerNumber].setText([
-    //     `Level: ${player.stats.level - 5}`,
-    //     `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-    //     // 'Archetype: ' + this.data.get('archetype')
-    // ]);
+    displayStats[player.playerNumber].setText([
+        `Level: ${player.stats.level - 5}`,
+        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+        // 'Archetype: ' + this.data.get('archetype')
+    ]);
 
     //if (gamepad.A && player.body.velocity.y >= 0) {
     //player.setVelocityY(-330);

@@ -30,13 +30,17 @@ export default class playerMovement {
     this.player.setVelocityY(speed * Math.sin(angle));
 
     let direction = 'right'
+    if (x === 0 && y === 0) {
+      this.player.anims.play('turn');
+      return;
+    }
     if (Math.abs(x) > Math.abs(y)) {
       if (x > 0) direction = 'right'
       else if (x < 0) direction = 'left'
     }
     else {
-      if (y > 0) direction = 'down'
-      else if (y < 0) direction = 'up'
+      if (y > 0) direction = 'turn'
+      else if (y < 0) direction = 'turn'
     }
 
     this.player.anims.play(direction, true);

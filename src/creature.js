@@ -1,3 +1,5 @@
+import constants from './constants';
+
 export default class Creature{
 
 	constructor(scene, x, y, stats){
@@ -58,7 +60,7 @@ export default class Creature{
 	}
 
 	getSpeedInPx(){
-		const SPEED_UNIT_PX 	= 350;
+		const SPEED_UNIT_PX 	= constants.monsterBaseSpeed;
 
 		return this.getSpeed() * SPEED_UNIT_PX;
 	}
