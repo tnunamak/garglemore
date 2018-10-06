@@ -4,12 +4,10 @@ const LEVEL_SCALING_FACTOR = 0.01
 const FUZZ_VARIANCE = 0.1
 
 const statBases = require('./statBases')
-const archetypes = require('./archetypes')
 const normalDistribution = require('./normalNumbers.js')
 
-module.exports = function getStat (level, archetype) {
+module.exports = function getStat (level, modifiers) {
   const stats = Object.keys(statBases)
-  const modifiers = archetypes[archetype].modifiers
 
   return stats.reduce((acc, stat) => {
     acc[stat] = computeStat(stat, level, modifiers[stat] || 0)
