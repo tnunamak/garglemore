@@ -14,15 +14,17 @@ export default class Creature{
 		let statSum = 0.0;
 
 		for(let statName in statVals){
-			let statVal = statVals[statName]
+			let statRatio = statVals[statName] / constants.baseStatValue
 			if(statName == 'speed')
-				statVal = 1 - statVals[statName];
+			{
+				statRatio = statVals[statName] / constants.monsterBaseSpeed
+				statRatio = 1 - statRatio;
+			}
 
-			statSum = statSum + statVal;
+			statSum = statSum + statRatio;
 		}
 
-		let scale = statSum / Object.keys(statVals).length;
-		return scale + 1;
+		return statSum + 1;
 	}
 
 	moveTowards(renderObj){

@@ -9,8 +9,8 @@ import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
 import Bullet from './bullet'
 
-function makeCharacter(level, type) {
-    getStats(level, archetypes[type].modifiers)
+function genCreatureStats(level, type) {
+  return getStats(level, archetypes[type].modifiers)
 }
 
 var config = {
@@ -84,11 +84,7 @@ function create() {
         const x = Phaser.Math.Between(50, 1150);
         const y = Phaser.Math.Between(50, 730);
 
-        let stats = {
-            health: Phaser.Math.Between(1, 100) / 100,
-            speed: Phaser.Math.Between(1, 100) / 100,
-            attack: Phaser.Math.Between(1, 100) / 100
-        }
+        let stats = genCreatureStats(1, 'shooter')
 
         creatures.push(new Creature(this, x, y, stats));
     }
