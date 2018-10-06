@@ -9,7 +9,7 @@ export default class playerMovement {
     this.cursors = scene.input.keyboard.createCursorKeys();
     this.playerSpeed = this.player.stats.speed;
   }
-  
+
   checkMovement (gamepad) {
     if (gamepad) {
       this.checkGamepadMovement.apply(this, arguments)
@@ -19,30 +19,45 @@ export default class playerMovement {
     }
   }
 
-  checkGamepadMovement (gamepad) {
-    
+  getGamepadMovement (gamepad) {
     let {x, y} = gamepad.leftStick
-    let speed = this.playerSpeed * gamepad.leftStick.length()
-    let angle = gamepad.leftStick.angle()
+    // TODO speed depend on player's speed attribute
+    return {
+      speed: this.playerSpeed * gamepad.leftStick.length(),
+      angle: gamepad.leftStick.angle()
+    }
+  }
 
+  updateGamepadMovement (gamepad) {
+    let { speed, angle } = this.getGamepadMovement(gamepad)
+    this.updateMovement(speed, angle)
+  }
+
+  updateMovement (speed, angle) {
     this.player.setVelocityX(speed * Math.cos(angle));
     this.player.setVelocityY(speed * Math.sin(angle));
 
-    let direction = 'right'
-    if (x === 0 && y === 0) {
-      this.player.anims.play('turn');
-      return;
+    let direction = 'turn'
+    angle = angle + (Math.PI / 4)
+    if (angle >= 0 && angle < Math.PI / 2) {
+      direction = 'right'
     }
-    if (Math.abs(x) > Math.abs(y)) {
-      if (x > 0) direction = 'right'
-      else if (x < 0) direction = 'left'
+    else if (angle >= Math.PI / 2 && angle < Math.PI) {
+      direction = 'turn'
+    }
+    else if (angle >= Math.PI && angle < 3 * Math.PI / 2) {
+      direction = 'left'
     }
     else {
-      if (y > 0) direction = 'turn'
-      else if (y < 0) direction = 'turn'
+      direction = 'turn'
     }
 
-    this.player.anims.play(direction, true);
+    try {
+      this.player.anims.play(direction, true);
+    }
+    catch (e) {
+      // Don't crash if the animation doesn't exist
+    }
   }
 
   // deprecated

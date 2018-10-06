@@ -1,4 +1,3 @@
-import 'Phaser';
 import getStats from '../stats'
 import archetypes from '../archetypes.js'
 import Cursors from './player-movement.js'

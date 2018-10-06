@@ -103,16 +103,33 @@ function update() {
 }
 
 function updatePlayer({ player, movement }, gamepad) {
-    movement.checkMovement(gamepad);
-    creatureGroup.moveTowards(player);
+  movement.updateGamepadMovement(gamepad);
+  creatureGroup.moveTowards(player);
 
-    //display
-    displayStats[player.playerNumber].setText([
-        `Player ${player.playerNumber}`,
-        `Level: ${player.stats.level - 5}`,
-        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-        `Speed: ${player.stats.speed}`,
-        `Attack: ${player.stats.attack}`,
-        player.archetype ? `Archetype: ${player.archetype}` : null,
-    ]);
+  //display
+  displayStats[player.playerNumber].setText([
+      `Player ${player.playerNumber}`,
+      `Level: ${player.stats.level - 5}`,
+      `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+      `Speed: ${player.stats.speed}`,
+      `Attack: ${player.stats.attack}`,
+      player.archetype ? `Archetype: ${player.archetype}` : null,
+  ]);
+
+  if (gamepad.A && !player.dash && player.canDash !== false) {
+    player.body.checkCollision.none = true
+    player.dash = movement.getGamepadMovement(gamepad)
+    player.canDash = false
+    setTimeout(() => {
+      delete player.dash
+      player.body.checkCollision.none = false
+    }, 64)
+    setTimeout(() => player.canDash = true, 300)
+  }
+
+  if (player.dash) {
+    const DASH_FACTOR = 5
+    let { speed, angle } = player.dash
+    movement.updateMovement(speed * DASH_FACTOR, angle)
+  }
 }
