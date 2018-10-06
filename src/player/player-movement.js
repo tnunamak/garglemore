@@ -7,7 +7,7 @@ export default class playerMovement {
     this.scene = scene;
     this.player = player;
     this.cursors = scene.input.keyboard.createCursorKeys();
-    this.playerSpeed = this.player.stats.speed * constants.baseSpeed;
+    this.playerSpeed = this.player.stats.speed;
   }
   
   checkMovement (gamepad) {
@@ -22,7 +22,6 @@ export default class playerMovement {
   checkGamepadMovement (gamepad) {
     
     let {x, y} = gamepad.leftStick
-    // TODO speed depend on player's speed attribute
     let speed = this.playerSpeed * gamepad.leftStick.length()
     let angle = gamepad.leftStick.angle()
 
