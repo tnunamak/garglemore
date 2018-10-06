@@ -7,7 +7,7 @@ export default class playerMovement {
     this.scene = scene;
     this.player = player;
     this.cursors = scene.input.keyboard.createCursorKeys();
-    this.playerSpeed = this.player.stats.speed * constants.baseSpeed;
+    this.playerSpeed = this.player.stats.speed;
   }
 
   checkMovement (gamepad) {

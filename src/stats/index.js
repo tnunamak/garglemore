@@ -1,3 +1,5 @@
+const constants = require('../constants.js').default;
+
 // How strong the leveling effect is.
 const LEVEL_SCALING_FACTOR = 0.01
 // How random individual stats can be.
@@ -8,9 +10,8 @@ const normalDistribution = require('./normalNumbers.js')
 
 module.exports = function getStat (level, modifiers) {
   const stats = Object.keys(statBases)
-
   return stats.reduce((acc, stat) => {
-    acc[stat] = computeStat(stat, level, modifiers[stat] || 0)
+    acc[stat] = Math.round(computeStat(stat, level, modifiers[stat] || 0) * constants.baseStatValue);
     return acc
   }, {})
 }
