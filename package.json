@@ -1,0 +1,26 @@
+{
+  "name": "garglemore",
+  "version": "1.0.0",
+  "description": "I don't know what this is.",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tnunamak/garglemore.git"
+  },
+  "author": "Tim Nunamaker <tim.nunamaker@bazaarvoice.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tnunamak/garglemore/issues"
+  },
+  "homepage": "https://github.com/tnunamak/garglemore#readme",
+  "dependencies": {
+    "phaser": "^3.14.0"
+  },
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}
