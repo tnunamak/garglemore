@@ -1,7 +1,6 @@
-<<<<<<< HEAD
-# Phaser 3 Webpack Project Template
+# Garglemore
 
-A Phaser 3 Project Template
+Is a game.
 
 ### Requirements
 
@@ -15,11 +14,3 @@ Run next commands in your terminal:
 |---------|-------------|
 | `npm install` | Install dependencies and launch browser with examples.|
 | `npm start` | Launch browser to show the examples. <br> Press `Ctrl + c` to kill **http-server** process. |
-=======
-=======
-# garglemore
-
-Run `npm start`. Open http://localhost:8080.
-
-If it's the first time you're running it, run `npm i` first.
->>>>>>> master
