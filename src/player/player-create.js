@@ -1,6 +1,8 @@
 import 'Phaser';
 import getStats from '../stats'
 import archetypes from '../archetypes.js'
+import Cursors from './player-movement.js'
+
 
 export function createPlayer (scene, archetype = archetypes.shooter) {
   const startingLevel = 6;
@@ -8,9 +10,6 @@ export function createPlayer (scene, archetype = archetypes.shooter) {
   player.stats = getStats(startingLevel, archetype.modifiers)
   player.stats.maxHealth = player.stats.health;
   player.stats.level = startingLevel;
-
-  scene.data.set('player', player);
-  scene.data.set('playerStats', player.stats);
 
   player.setCollideWorldBounds(true);
 
@@ -34,5 +33,23 @@ export function createPlayer (scene, archetype = archetypes.shooter) {
       repeat: -1
   });
 
+  // physics interactions
+  const walls = scene.data.get('walls');
+  walls.forEach(wall => {
+    scene.physics.add.collider(player, wall)
+  });
+
   return player;
 };
+
+export function joinPlayer(pad) {
+    let player = createPlayer(this);
+
+    let movement = new Cursors(this, player, pad);
+    player.setCollideWorldBounds(true);
+
+    return {
+        player,
+        movement
+    }
+}

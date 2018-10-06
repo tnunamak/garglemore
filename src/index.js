@@ -2,27 +2,10 @@ import 'phaser';
 
 import archetypes from './archetypes'
 import getStats from './stats'
-import Cursors from './player/player-movement.js'
-import { createPlayer } from './player/player-create.js'
+import { createPlayer, joinPlayer } from './player/player-create.js'
 
 function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
-}
-
-function joinPlayer(pad) {
-    let player = createPlayer(this);
-
-    let movement = new Cursors(this, player, pad);
-    player.setCollideWorldBounds(true);
-
-    // physics interactions
-    this.physics.add.collider(player, horizontalWalls);
-    this.physics.add.collider(player, verticalWalls);
-
-    return {
-        player,
-        movement
-    }
 }
 
 var config = {
@@ -30,7 +13,7 @@ var config = {
     width: 1200,
     height: 780,
     input: {
-      gamepad: true
+        gamepad: true
     },
     physics: {
         default: 'arcade',
@@ -50,8 +33,8 @@ let stars;
 let platforms;
 let horizontalWalls;
 let verticalWalls;
-let displayStats;
-const players = new Map()
+// let displayStats = [];
+const players = new Map();
 
 let game = new Phaser.Game(config);
 
@@ -63,13 +46,20 @@ function preload() {
 }
 
 function create() {
+    this.data.set('players', players);
     horizontalWalls = this.physics.add.staticGroup();
     verticalWalls = this.physics.add.staticGroup();
+    this.data.set('walls', [horizontalWalls, verticalWalls])
+
+    // player join listener
     this.input.gamepad.on('down', function (pad, button, index) {
         if (!players.has(pad)) {
-          players.set(pad, joinPlayer.bind(this)(pad))
+            const joinedPlayerAndMovement = joinPlayer.bind(this)(pad);
+            joinedPlayerAndMovement.player.playerNumber = players.size;
+            players.set(pad, joinedPlayerAndMovement);
+            // displayStats.push(this.add.text(50, 50 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
         }
-      }, this)
+    }, this)
 
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
@@ -77,27 +67,25 @@ function create() {
         verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
-    
-    // display
-    // displayStats = this.add.text(50, 50, '', { font: '12px Courier', fill: '#00ff00' });
-    // displayStats.setText([
-    //     `Level: ${this.data.get('playerStats').level - 5}`,
-    //     `Health: ${this.data.get('playerStats').health}/${this.data.get('playerStats').maxHealth}`,
-    //     // 'Archetype: ' + this.data.get('archetype')
-    // ]);
 }
 
 function update() {
-  if (!players.size) {
-    return
-  }
-  players.forEach(updatePlayer)
+    if (!players.size) {
+        return
+    }
+    players.forEach(updatePlayer)
 }
 
-function updatePlayer ({ player, movement }, gamepad) {
-  movement.checkMovement(gamepad);
+function updatePlayer({ player, movement }, gamepad) {
+    movement.checkMovement(gamepad);
+    //display
+    // displayStats[player.playerNumber].setText([
+    //     `Level: ${player.stats.level - 5}`,
+    //     `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+    //     // 'Archetype: ' + this.data.get('archetype')
+    // ]);
 
-  //if (gamepad.A && player.body.velocity.y >= 0) {
+    //if (gamepad.A && player.body.velocity.y >= 0) {
     //player.setVelocityY(-330);
-  //}
+    //}
 }
