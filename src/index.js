@@ -3,6 +3,7 @@ import 'phaser';
 import archetypes from './archetypes'
 import getStats from './stats'
 import Cursors from './player/player-movement.js'
+import { createPlayer } from './player/player-create.js'
 
 function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
@@ -26,12 +27,12 @@ var config = {
     }]
 };
 
-let player;
 let stars;
 let platforms;
 let playerMovement;
 let horizontalWalls;
 let verticalWalls;
+let displayStats;
 
 let game = new Phaser.Game(config);
 
@@ -43,13 +44,9 @@ function preload() {
 }
 
 function create() {
-    //Create all the things
     horizontalWalls = this.physics.add.staticGroup();
     verticalWalls = this.physics.add.staticGroup();
 
-    player = this.physics.add.sprite(100, 450, 'dude');
-    
-    
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
         horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
@@ -58,54 +55,23 @@ function create() {
     }
     
     // player
+    createPlayer(this);
+    let player = this.data.get('player');
     playerMovement = new Cursors(this, player);
-    player.setCollideWorldBounds(true);
 
-    this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'turn',
-        frames: [{ key: 'dude', frame: 4 }],
-        frameRate: 20
-    });
-
-    this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    // stars
-    stars = this.physics.add.group({
-        key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
-    });
-
-    stars.children.iterate(function (child) {
-
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-
-    });
+    // display
+    displayStats = this.add.text(50, 50, '', { font: '12px Courier', fill: '#00ff00' });
+    displayStats.setText([
+        `Level: ${this.data.get('playerStats').level - 5}`,
+        `Health: ${this.data.get('playerStats').health}/${this.data.get('playerStats').maxHealth}`,
+        // 'Archetype: ' + this.data.get('archetype')
+    ]);
 
     // physics interactions
     this.physics.add.collider(player, horizontalWalls);
     this.physics.add.collider(player, verticalWalls);
-    this.physics.add.collider(stars, horizontalWalls);
-
-    this.physics.add.overlap(player, stars, collectStar, null, this);
 }
 
 function update() {
     playerMovement.checkMovement();
-}
-
-function collectStar(player, star) {
-    star.disableBody(true, true);
 }
