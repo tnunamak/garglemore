@@ -4,7 +4,7 @@
   "description": "I don't know what this is.",
   "main": "index.js",
   "scripts": {
-    "start": "http-server",
+    "start": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,12 +20,10 @@
   "devDependencies": {
     "webpack-dev-server": "^2.11.0",
     "webpack": "^3.4.1",
-    "raw-loader": "^0.5.1"
+    "raw-loader": "^0.5.1",
+    "gaussian": "^1.1.0"
   },
   "dependencies": {
     "phaser": "^3.3.0"
-  },
-  "devDependencies": {
-    "http-server": "^0.11.1"
   }
 }
