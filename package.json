@@ -4,6 +4,7 @@
   "description": "I don't know what this is.",
   "main": "index.js",
   "scripts": {
+    "build": "webpack",
     "start": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
