@@ -3,6 +3,8 @@ import 'phaser';
 import archetypes from './archetypes'
 import getStats from './stats'
 
+import Creature from './creature';
+
 function makeCharacter (level, type) {
   getStats(level, archetypes[type].modifiers)
 }
@@ -40,6 +42,7 @@ function preload ()
     this.load.image('star', 'public/assets/star.png');
     // this.load.image('bomb', 'assets/bomb.png');
     this.load.image('basic_wall', 'public/assets/images/basic-wall-30x60.png')
+    this.load.image('hotdog',   'assets/hotdog.png');
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
@@ -97,6 +100,19 @@ function create() {
     this.physics.add.collider(stars, floorWalls);
 
     this.physics.add.overlap(player, stars, collectStar, null, this);
+
+    
+    for (var i = 0; i < 10; i++) {
+        const x = Phaser.Math.Between(100, 600);
+        const y = Phaser.Math.Between(100, 600);
+        let stats = {
+          health: Phaser.Math.Between(1, 100) / 100,
+          speed: Phaser.Math.Between(1, 100) / 100,
+          attack: Phaser.Math.Between(1, 100) / 100
+        }
+
+        let creature = new Creature(this, x, y, stats);
+    }
 }
 
 function update() {
