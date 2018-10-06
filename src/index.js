@@ -3,6 +3,7 @@ import 'phaser';
 import archetypes from './archetypes'
 import getStats from './stats'
 import { joinPlayer } from './player/player-create.js'
+import { addAnimations } from './animations.js'
 import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
@@ -33,11 +34,7 @@ var config = {
     }]
 };
 
-let stars;
-let platforms;
 var creatureGroup;
-let horizontalWalls;
-let verticalWalls;
 let displayStats = [];
 let bullets;
 let players = new Map();
@@ -55,8 +52,8 @@ function preload() {
 
 function create() {
     this.data.set('players', players);
-    horizontalWalls = this.physics.add.staticGroup();
-    verticalWalls = this.physics.add.staticGroup();
+    const horizontalWalls = this.physics.add.staticGroup();
+    const verticalWalls = this.physics.add.staticGroup();
     this.data.set('walls', [horizontalWalls, verticalWalls])
 
     // player join listener
@@ -66,7 +63,7 @@ function create() {
             const { player } = joinedPlayerAndMovement;
             player.playerNumber = players.size;
             players.set(pad, joinedPlayerAndMovement);
-            displayStats.push(this.add.text(50, 30 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
+            displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
             creatureGroup.collidesWith(player);
         }
     }, this)
@@ -78,53 +75,8 @@ function create() {
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
 
-    this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'turn',
-        frames: [{ key: 'dude', frame: 4 }],
-        frameRate: 20
-    });
-
-    this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'zombie-down',
-        frames: this.anims.generateFrameNumbers('zombie', { start: 0, end: 2 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'zombie-left',
-        frames: this.anims.generateFrameNumbers('zombie', { start: 3, end: 5 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'zombie-right',
-        frames: this.anims.generateFrameNumbers('zombie', { start: 6, end: 8 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'zombie-up',
-        frames: this.anims.generateFrameNumbers('zombie', { start: 9, end: 11 }),
-        frameRate: 10,
-        repeat: -1
-    });
+    // add animations
+    addAnimations(this);
 
     let creatures = [];
 
@@ -165,11 +117,13 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
 
   //display
   displayStats[player.playerNumber].setText([
+    `Player ${player.playerNumber}`,
     `Level: ${player.stats.level - 5}`,
     `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-    // 'Archetype: ' + this.data.get('archetype')
+    `Speed: ${player.stats.speed}`,
+    `Attack: ${player.stats.attack}`,
+    player.archetype ? `Archetype: ${player.archetype}` : null,
   ]);
-
   // abstract out gun cooldown (150)
   if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
     let bullet = bullets.get()
@@ -181,8 +135,4 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
       bullet.fire(player.x, player.y, angle)
     }
   }
-
-    //if (gamepad.A && player.body.velocity.y >= 0) {
-    //player.setVelocityY(-330);
-    //}
 }
