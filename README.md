@@ -1,2 +1,5 @@
 # garglemore
-I don't know what this is.
+
+Run `npm start`. Open http://localhost:8080.
+
+If it's the first time you're running it, run `npm i` first.
