@@ -9,10 +9,29 @@ function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
 }
 
+function joinPlayer(pad) {
+    let player = createPlayer(this);
+
+    let movement = new Cursors(this, player, pad);
+    player.setCollideWorldBounds(true);
+
+    // physics interactions
+    this.physics.add.collider(player, horizontalWalls);
+    this.physics.add.collider(player, verticalWalls);
+
+    return {
+        player,
+        movement
+    }
+}
+
 var config = {
     type: Phaser.AUTO,
     width: 1200,
     height: 780,
+    input: {
+      gamepad: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -29,10 +48,10 @@ var config = {
 
 let stars;
 let platforms;
-let playerMovement;
 let horizontalWalls;
 let verticalWalls;
 let displayStats;
+const players = new Map()
 
 let game = new Phaser.Game(config);
 
@@ -46,6 +65,11 @@ function preload() {
 function create() {
     horizontalWalls = this.physics.add.staticGroup();
     verticalWalls = this.physics.add.staticGroup();
+    this.input.gamepad.on('down', function (pad, button, index) {
+        if (!players.has(pad)) {
+          players.set(pad, joinPlayer.bind(this)(pad))
+        }
+      }, this)
 
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
@@ -54,24 +78,26 @@ function create() {
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
     
-    // player
-    createPlayer(this);
-    let player = this.data.get('player');
-    playerMovement = new Cursors(this, player);
-
     // display
-    displayStats = this.add.text(50, 50, '', { font: '12px Courier', fill: '#00ff00' });
-    displayStats.setText([
-        `Level: ${this.data.get('playerStats').level - 5}`,
-        `Health: ${this.data.get('playerStats').health}/${this.data.get('playerStats').maxHealth}`,
-        // 'Archetype: ' + this.data.get('archetype')
-    ]);
-
-    // physics interactions
-    this.physics.add.collider(player, horizontalWalls);
-    this.physics.add.collider(player, verticalWalls);
+    // displayStats = this.add.text(50, 50, '', { font: '12px Courier', fill: '#00ff00' });
+    // displayStats.setText([
+    //     `Level: ${this.data.get('playerStats').level - 5}`,
+    //     `Health: ${this.data.get('playerStats').health}/${this.data.get('playerStats').maxHealth}`,
+    //     // 'Archetype: ' + this.data.get('archetype')
+    // ]);
 }
 
 function update() {
-    playerMovement.checkMovement();
+  if (!players.size) {
+    return
+  }
+  players.forEach(updatePlayer)
+}
+
+function updatePlayer ({ player, movement }, gamepad) {
+  movement.checkMovement(gamepad);
+
+  //if (gamepad.A && player.body.velocity.y >= 0) {
+    //player.setVelocityY(-330);
+  //}
 }
