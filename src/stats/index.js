@@ -33,5 +33,5 @@ function chooseModifier (base) {
   const stretch = normalDistribution[Math.floor(Math.random() * normalDistribution.length)]
   const fuzzBy = (min + stretch * (max - min))
 
-  return base + fuzzBy
+  return Math.abs(base + fuzzBy)
 }

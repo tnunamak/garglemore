@@ -2,14 +2,15 @@ import 'phaser';
 
 import archetypes from './archetypes'
 import getStats from './stats'
-import { createPlayer, joinPlayer } from './player/player-create.js'
+import { joinPlayer } from './player/player-create.js'
 import { addAnimations } from './animations.js'
 import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
+import Bullet from './bullet'
 
-function makeCreatureStats(level, type) {
-    return getStats(level, archetypes[type].modifiers)
+function genCreatureStats(level, type) {
+  return getStats(level, archetypes[type].modifiers)
 }
 
 var config = {
@@ -35,8 +36,8 @@ var config = {
 
 let creatureGroup;
 let displayStats = [];
-const players = new Map();
-
+let bullets;
+let players = new Map();
 let game = new Phaser.Game(config);
 
 function preload() {
@@ -45,6 +46,8 @@ function preload() {
     this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
+
+    this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
 }
 
 function create() {
@@ -90,30 +93,62 @@ function create() {
 
     // add animations
     addAnimations(this);
+
+    bullets = this.add.group({
+        classType: Bullet,
+        maxSize: 100,
+        runChildUpdate: true
+    })
 }
 
-function update() {
+function update(time, delta) {
     if (!players.size) {
         return
     }
-    players.forEach(updatePlayer)
+    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
 }
 
-function updatePlayer({ player, movement }, gamepad) {
-    movement.checkMovement(gamepad);
-    if (creatureGroup) {
-        creatureGroup.moveTowards(player);
-    }
+function updatePlayer({ player, movement }, gamepad, time, delta) {
+  movement.updateGamepadMovement(gamepad);
+  creatureGroup.moveTowards(player);
 
-    //display
-    displayStats[player.playerNumber].setText([
-        `Player ${player.playerNumber}`,
-        `Level: ${player.stats.level - 5}`,
-        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-        `Speed: ${player.stats.speed}`,
-        `Attack: ${player.stats.attack}`,
-        player.archetype ? `Archetype: ${player.archetype}` : null,
-    ]);
+  //display
+  displayStats[player.playerNumber].setText([
+    `Player ${player.playerNumber}`,
+    `Level: ${player.stats.level - 5}`,
+    `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+    `Speed: ${player.stats.speed}`,
+    `Attack: ${player.stats.attack}`,
+    player.archetype ? `Archetype: ${player.archetype}` : null,
+  ]);
+
+  if (gamepad.A && !player.dash && player.canDash !== false) {
+    player.body.checkCollision.none = true
+    player.dash = movement.getGamepadMovement(gamepad)
+    player.canDash = false
+    setTimeout(() => {
+      delete player.dash
+      player.body.checkCollision.none = false
+    }, 64)
+    setTimeout(() => player.canDash = true, 300)
+  }
+
+  if (player.dash) {
+    const DASH_FACTOR = 5
+    let { speed, angle } = player.dash
+    movement.updateMovement(speed * DASH_FACTOR, angle)
+  }
+  // abstract out gun cooldown (150)
+  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
+    let bullet = bullets.get()
+    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
+
+    if (bullet) {
+      player.lastFired = time
+      player.lastFireAngle = angle
+      bullet.fire(player.x, player.y, angle)
+    }
+  }
 }
 
 function addNewCreatureGroup(scene) {
