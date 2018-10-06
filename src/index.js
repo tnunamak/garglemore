@@ -86,7 +86,7 @@ function create() {
         verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
-   
+
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -175,13 +175,27 @@ function update() {
 }
 
 function updatePlayer ({ player, movement }, gamepad) {
-  movement.checkMovement(gamepad);
   creatureGroup.moveTowards(player);
-  //if (gamepad.A && player.body.velocity.y >= 0) {
-    //player.setVelocityY(-330);
-  //}
+  movement.updateGamepadMovement(gamepad);
+
+  if (gamepad.A && !player.dash && player.canDash !== false) {
+    player.body.checkCollision.none = true
+    player.dash = movement.getGamepadMovement(gamepad)
+    player.canDash = false
+    setTimeout(() => {
+      delete player.dash
+      player.body.checkCollision.none = false
+    }, 64)
+    setTimeout(() => player.canDash = true, 300)
+  }
+
+  if (player.dash) {
+    const DASH_FACTOR = 5
+    let { speed, angle } = player.dash
+    movement.updateMovement(speed * DASH_FACTOR, angle)
+  }
 }
 
 function collectStar(player, star) {
-    star.disableBody(true, true);
+  star.disableBody(true, true);
 }

@@ -16,26 +16,46 @@ export default class playerMovement {
     }
   }
 
-  checkGamepadMovement (gamepad) {
+
+  getGamepadMovement (gamepad) {
     let {x, y} = gamepad.leftStick
     // TODO speed depend on player's speed attribute
-    let speed = 300 * gamepad.leftStick.length()
-    let angle = gamepad.leftStick.angle()
+    return {
+      speed: 300 * gamepad.leftStick.length(),
+      angle: gamepad.leftStick.angle()
+    }
+  }
 
+  updateGamepadMovement (gamepad) {
+    let { speed, angle } = this.getGamepadMovement(gamepad)
+    this.updateMovement(speed, angle)
+  }
+
+  updateMovement (speed, angle) {
     this.player.setVelocityX(speed * Math.cos(angle));
     this.player.setVelocityY(speed * Math.sin(angle));
 
     let direction = 'right'
-    if (Math.abs(x) > Math.abs(y)) {
-      if (x > 0) direction = 'right'
-      else if (x < 0) direction = 'left'
+    angle = angle + (Math.PI / 4)
+    if (angle >= 0 && angle < Math.PI / 2) {
+      direction = 'right'
+    }
+    else if (angle >= Math.PI / 2 && angle < Math.PI) {
+      direction = 'up'
+    }
+    else if (angle >= Math.PI && angle < 3 * Math.PI / 2) {
+      direction = 'left'
     }
     else {
-      if (y > 0) direction = 'down'
-      else if (y < 0) direction = 'up'
+      direction = 'down'
     }
 
-    this.player.anims.play(direction, true);
+    try {
+      this.player.anims.play(direction, true);
+    }
+    catch (e) {
+      // Don't crash if the animation doesn't exist
+    }
   }
 
   // deprecated
