@@ -1,5 +1,12 @@
 import 'phaser';
 
+import archetypes from './archetypes'
+import getStats from './stats'
+
+function makeCharacter (level, type) {
+  getStats(level, archetypes[type].modifiers)
+}
+
 var config = {
     type: Phaser.AUTO,
     width: 800,
