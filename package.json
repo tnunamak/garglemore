@@ -17,8 +17,13 @@
     "url": "https://github.com/tnunamak/garglemore/issues"
   },
   "homepage": "https://github.com/tnunamak/garglemore#readme",
+  "devDependencies": {
+    "webpack-dev-server": "^2.11.0",
+    "webpack": "^3.4.1",
+    "raw-loader": "^0.5.1"
+  },
   "dependencies": {
-    "phaser": "^3.14.0"
+    "phaser": "^3.3.0"
   },
   "devDependencies": {
     "http-server": "^0.11.1"
