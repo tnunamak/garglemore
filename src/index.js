@@ -95,7 +95,6 @@ function create() {
     });
 
     // physics interactions
-
     this.physics.add.collider(player, horizontalWalls);
     this.physics.add.collider(player, verticalWalls);
     this.physics.add.collider(stars, horizontalWalls);
