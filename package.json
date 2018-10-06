@@ -4,8 +4,8 @@
   "description": "I don't know what this is.",
   "main": "index.js",
   "scripts": {
-    "start": "http-server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack",
+    "start": "npm run build && webpack-dev-server --port=8000"
   },
   "repository": {
     "type": "git",
