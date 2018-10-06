@@ -2,6 +2,7 @@ import 'phaser';
 
 import archetypes from './archetypes'
 import getStats from './stats'
+import Cursors from './player/player-movement.js'
 
 function makeCharacter(level, type) {
     getStats(level, archetypes[type].modifiers)
@@ -25,37 +26,39 @@ var config = {
     }]
 };
 
-var player;
-var stars;
-var platforms;
-var cursors;
-var horizontalWalls;
-var verticalWalls;
+let player;
+let stars;
+let platforms;
+let playerMovement;
+let horizontalWalls;
+let verticalWalls;
 
-var game = new Phaser.Game(config);
+let game = new Phaser.Game(config);
 
 function preload() {
-    // this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'public/assets/star.png');
-    // this.load.image('bomb', 'assets/bomb.png');
     this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
     this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create() {
+    //Create all the things
     horizontalWalls = this.physics.add.staticGroup();
     verticalWalls = this.physics.add.staticGroup();
+
+    player = this.physics.add.sprite(100, 450, 'dude');
+    
+    
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
         horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
         verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
         verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
     }
-
-
-    player = this.physics.add.sprite(100, 450, 'dude');
-
+    
+    // player
+    playerMovement = new Cursors(this, player);
     player.setCollideWorldBounds(true);
 
     this.anims.create({
@@ -78,8 +81,7 @@ function create() {
         repeat: -1
     });
 
-    cursors = this.input.keyboard.createCursorKeys();
-
+    // stars
     stars = this.physics.add.group({
         key: 'star',
         repeat: 11,
@@ -92,6 +94,7 @@ function create() {
 
     });
 
+    // physics interactions
     this.physics.add.collider(player, horizontalWalls);
     this.physics.add.collider(player, verticalWalls);
     this.physics.add.collider(stars, horizontalWalls);
@@ -100,28 +103,7 @@ function create() {
 }
 
 function update() {
-    if (cursors.left.isDown) {
-        player.setVelocityX(-160);
-
-        player.anims.play('left', true);
-    }
-    if (cursors.right.isDown) {
-        player.setVelocityX(160);
-
-        player.anims.play('right', true);
-    }
-    if (cursors.down.isDown) {
-        player.setVelocityY(160);
-    }
-    if (cursors.up.isDown) {
-        player.setVelocityY(-160);
-    }
-    if (!cursors.left.isDown && !cursors.right.isDown && !cursors.down.isDown && !cursors.up.isDown) {
-        player.setVelocityX(0);
-        player.setVelocityY(0);
-
-        player.anims.play('turn');
-    }
+    playerMovement.checkMovement();
 }
 
 function collectStar(player, star) {
