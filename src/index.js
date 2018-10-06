@@ -5,19 +5,19 @@ import getStats from './stats'
 
 import Creature from './creature';
 
-function makeCharacter (level, type) {
-  getStats(level, archetypes[type].modifiers)
+function makeCharacter(level, type) {
+    getStats(level, archetypes[type].modifiers)
 }
 
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 780,
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 300 },
-            debug: false
+            gravity: { x: 0, y: 0 },
+            debug: true
         }
     },
     scene: [{
@@ -31,35 +31,34 @@ var player;
 var stars;
 var platforms;
 var cursors;
-var floorWalls;
+var horizontalWalls;
+var verticalWalls;
 
 var game = new Phaser.Game(config);
 
-function preload ()
-{
-    this.load.image('sky', 'public/assets/sky.png');
+function preload() {
     // this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'public/assets/star.png');
     // this.load.image('bomb', 'assets/bomb.png');
-    this.load.image('basic_wall', 'public/assets/images/basic-wall-30x60.png')
-    this.load.image('hotdog',   'assets/hotdog.png');
+    this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
+    this.load.image('vertical_wall',  'public/assets/images/vertical-wall-60x30.png')
+    this.load.image('hotdog',         'assets/hotdog.png');
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create() {
-    this.add.image(400, 300, 'sky');
-
-    floorWalls = this.physics.add.staticGroup();
-    // floorWalls.add.group({
-    //     key: 'basic_wall',
-    //     repeat: 10,
-    //     setXY: { x: 30, y: 45 },
-    // })
+    horizontalWalls = this.physics.add.staticGroup();
+    verticalWalls = this.physics.add.staticGroup();
+    for (let i = 1; i <= 20; i++) {
+        horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
+        horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
+        verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
+        verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
+    }
 
 
     player = this.physics.add.sprite(100, 450, 'dude');
 
-    player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
     this.anims.create({
@@ -96,8 +95,9 @@ function create() {
 
     });
 
-    this.physics.add.collider(player, floorWalls);
-    this.physics.add.collider(stars, floorWalls);
+    this.physics.add.collider(player, horizontalWalls);
+    this.physics.add.collider(player, verticalWalls);
+    this.physics.add.collider(stars, horizontalWalls);
 
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
@@ -121,19 +121,22 @@ function update() {
 
         player.anims.play('left', true);
     }
-    else if (cursors.right.isDown) {
+    if (cursors.right.isDown) {
         player.setVelocityX(160);
 
         player.anims.play('right', true);
     }
-    else {
+    if (cursors.down.isDown) {
+        player.setVelocityY(160);
+    }
+    if (cursors.up.isDown) {
+        player.setVelocityY(-160);
+    }
+    if (!cursors.left.isDown && !cursors.right.isDown && !cursors.down.isDown && !cursors.up.isDown) {
         player.setVelocityX(0);
+        player.setVelocityY(0);
 
         player.anims.play('turn');
-    }
-
-    if (cursors.up.isDown) {
-        player.setVelocityY(-330);
     }
 }
 
