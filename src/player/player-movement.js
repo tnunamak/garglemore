@@ -22,7 +22,6 @@ export default class playerMovement {
   checkGamepadMovement (gamepad) {
     
     let {x, y} = gamepad.leftStick
-    // TODO speed depend on player's speed attribute
     let speed = this.playerSpeed * gamepad.leftStick.length()
     let angle = gamepad.leftStick.angle()
 

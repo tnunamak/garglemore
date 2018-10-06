@@ -115,8 +115,4 @@ function updatePlayer({ player, movement }, gamepad) {
         `Attack: ${player.stats.attack}`,
         player.archetype ? `Archetype: ${player.archetype}` : null,
     ]);
-
-    //if (gamepad.A && player.body.velocity.y >= 0) {
-    //player.setVelocityY(-330);
-    //}
 }
