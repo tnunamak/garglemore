@@ -112,7 +112,7 @@ function update(time, delta) {
 }
 
 function updatePlayer({ player, movement }, gamepad, time, delta) {
-  movement.checkMovement(gamepad);
+  movement.updateGamepadMovement(gamepad);
   creatureGroup.moveTowards(player);
 
   //display
@@ -124,6 +124,23 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
     `Attack: ${player.stats.attack}`,
     player.archetype ? `Archetype: ${player.archetype}` : null,
   ]);
+
+  if (gamepad.A && !player.dash && player.canDash !== false) {
+    player.body.checkCollision.none = true
+    player.dash = movement.getGamepadMovement(gamepad)
+    player.canDash = false
+    setTimeout(() => {
+      delete player.dash
+      player.body.checkCollision.none = false
+    }, 64)
+    setTimeout(() => player.canDash = true, 300)
+  }
+
+  if (player.dash) {
+    const DASH_FACTOR = 5
+    let { speed, angle } = player.dash
+    movement.updateMovement(speed * DASH_FACTOR, angle)
+  }
   // abstract out gun cooldown (150)
   if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
     let bullet = bullets.get()
