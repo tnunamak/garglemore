@@ -126,7 +126,7 @@ function updatePlayer({ player, movement }, gamepad, time, delta, scene) {
                 // use last monster data
 
                 // create new wave and replace
-                timer = scene.time.delayedCall(5000, addNewCreatureGroup, [], scene)
+                timer = scene.time.delayedCall(3000, addNewCreatureGroup, [], scene)
             }
         }
     }
@@ -167,7 +167,7 @@ function updateDisplay(player) {
     ]);
 
     if (timer && timer.getProgress() !== 1) {
-        timerText.setText((timer.getProgress() * 5).toString().substr(0, 1));
+        timerText.setText((timer.getProgress() * 3).toString().substr(0, 1));
     } else {
         timerText.setText('');
     }
