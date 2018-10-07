@@ -24,11 +24,27 @@ class Gun {
     }
 
     const bullet = this.bullets.get()
+    bullet.target = "creatures"
     if (bullet) {
       this.lastFired = now
       let newAngle = angle ? angle : this.lastFireAngle
       this.lastFireAngle = newAngle
       bullet.fire(x, y, newAngle)
+    }
+  }
+
+  fireAtPlayers(creature, playerSprites, angle){
+    const now = Date.now()
+    if (now < this.lastFired + this.cooldown) {
+      return
+    }
+    const bullet = this.bullets.get()
+    bullet.target = "players"
+    if (bullet) {
+      this.lastFired = now
+      let newAngle = angle ? angle : this.lastFireAngle
+      this.lastFireAngle = newAngle
+      bullet.fireAtPlayers(creature, newAngle, playerSprites)
     }
   }
 }

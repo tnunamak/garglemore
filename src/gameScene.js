@@ -1,8 +1,8 @@
 import 'phaser';
 
 import archetypes from './archetypes'
-import { scaleStatsToLevel } from './stats'
-import { joinPlayer } from './player/player-create.js'
+import { updatePlayerStats, isPlayerDead } from './player/player-stats'
+import { joinPlayer, destroyPlayer } from './player/player-create.js'
 import { addAnimations } from './animations.js'
 import Creature from './creature';
 import Cursors from './player/player-movement.js'
@@ -11,6 +11,7 @@ import Bullet from './bullet'
 import mechanics from './mechanics'
 
 let creatureGroup;
+let playerGroup;
 let displayStats = [];
 let bullets;
 let players = new Map();
@@ -38,6 +39,13 @@ class Main extends Phaser.Scene {
     this.data.set('walls', [horizontalWalls, verticalWalls])
     timerText = this.add.text(640 - 36, 320, '', { font: '96px Courier', fill: '#00ff00' });
 
+    bullets = this.add.group({
+      classType: Bullet,
+      maxSize: 100,
+      runChildUpdate: true
+    })
+    this.data.set('bullets', bullets);
+
     // player join listener
     this.input.gamepad.on('down', function (pad, button, index) {
       if (!players.has(pad)) {
@@ -48,6 +56,7 @@ class Main extends Phaser.Scene {
 
         const { player } = joinedPlayerAndMovement;
         player.playerNumber = players.size;
+
         players.set(pad, joinedPlayerAndMovement);
         displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
         timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this);
@@ -79,14 +88,6 @@ class Main extends Phaser.Scene {
 
     // add animations
     addAnimations(this);
-
-    bullets = this.add.group({
-      classType: Bullet,
-      maxSize: 100,
-      runChildUpdate: true
-    })
-
-    this.data.set('bullets', bullets);
   }
 
   update(time, delta) {
@@ -94,6 +95,8 @@ class Main extends Phaser.Scene {
       return
     }
     players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
+    // Todo IF ALL PLAYERS DEAD, END GAME
+
     // creatures
     if (creatureGroup) {
       creatureGroup.removeDeadChildren();
@@ -114,6 +117,9 @@ class Main extends Phaser.Scene {
 }
 
 function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
+  if(isPlayerDead(player))
+    destroyPlayer(this, player)
+
   movement.updateGamepadMovement(gamepad);
 
   // display
@@ -139,19 +145,7 @@ function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
 }
 
 function updatePlayerForWave(playerData, gamepad, time, delta) {
-  let player = playerData.player
-  console.log(player)
-  if(! player.lastKilled)
-    return;
-  player.stats.level += 1
-  applyArchetypeToPlayer(player, player.lastKilled);
-}
-
-function applyArchetypeToPlayer(player, creature) {
-  let newStats = scaleStatsToLevel(creature.stats, player.stats.level)
-  player.stats = newStats
-  player.archetype = creature.archetype
-  player.setTint(creature.archetype.color)
+  updatePlayerStats(playerData.player);
 }
 
 function updateDisplay(player) {
