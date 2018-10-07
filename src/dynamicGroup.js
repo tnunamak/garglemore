@@ -1,57 +1,79 @@
 export default class DynamicGroup {
-	constructor(scene, children) {
-		this.scene = scene;
-		this.renderGroup = scene.physics.add.group();
-		this.children = [];
-		this.addChildren(children);
-		this.collidesWith(this.renderGroup);
-	}
+  constructor(scene, children) {
+    this.scene = scene;
+    this.renderGroup = scene.physics.add.group();
+    this.children = [];
+    this.addChildren(children);
+    this.collidesWith(this.renderGroup);
+  }
 
-	addChildren(children) {
-		for (let childIdx in children) {
-			this.addChild(children[childIdx]);
-		}
-	}
+  addChildren(children) {
+    for (let childIdx in children) {
+      this.addChild(children[childIdx]);
+    }
+  }
 
-	addChild(child) {
-		this.children.push(child);
-		this.renderGroup.add(child.sprite, false);
-	}
+  addChild(child) {
+    this.children.push(child);
+    this.renderGroup.add(child.sprite, false);
+  }
 
-	collidesWith(renderGroup) {
-		this.scene.physics.add.collider(renderGroup, this.renderGroup);
-	}
+  collidesWith(renderGroup) {
+    this.scene.physics.add.collider(renderGroup, this.renderGroup);
+  }
 
-	moveTowards(renderObj) {
-		for (var childIdx = 0; childIdx < this.children.length; childIdx++) {
-			let child = this.children[childIdx];
-			child.moveTowards(renderObj);
-		}
-	}
+  updateMovement(targetSprites) {
+    this.forEach(child => {
+      if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
+        const vector = child.archetype.ai.stepToward(child, targetSprites)
+        child.moveInDirection(vector)
+      }
+      else {
+        // TODO choose the closest one by default
+        child.moveTowards(targetSprites[0])
+      }
+    })
+  }
 
-	isEveryChildDestroyed() {
-		let resetGroup = true;
+  forEach(fn) {
+    for (var childIdx = 0; childIdx < this.children.length; childIdx++) {
+      let child = this.children[childIdx];
+      fn(child)
+    }
+  }
 
-		let renderGroupChildren = this.renderGroup.getChildren()
-		let removalIndices = [];
-		for (let [index, child] of this.children.entries()) {
-			let childIsHealthy = child.isHealthy();
-			if (childIsHealthy) {
-				resetGroup = false;
-				console.log('all good')
-				break;
-			}
+  moveTowards(renderObj){
+    this.forEach(function (child) {
+      child.moveTowards(renderObj);
+    })
+  }
 
-			// if child is NOT healthy, destroy
-			removalIndices.push(index);
-		};
+  isEveryChildDestroyed() {
+    let resetGroup = true;
+    let lastMonsterData;
+    let renderGroupChildren = this.renderGroup.getChildren()
+    let removalIndices = [];
+    for (let [index, child] of this.children.entries()) {
+      let childIsHealthy = child.isHealthy();
+      if (childIsHealthy) {
+        resetGroup = false;
+        break;
+      }
 
-		removalIndices = removalIndices.reverse();
-		removalIndices.forEach(index => {
-			renderGroupChildren[index].destroy();
-			Phaser.Utils.Array.Remove(this.children, this.children[index]);
-		})
+      // if child is NOT healthy, destroy
+      removalIndices.push(index);
+    };
 
-		return resetGroup;
-	}
+    removalIndices = removalIndices.reverse();
+    removalIndices.forEach(index => {
+      lastMonsterData = Object.assign(renderGroupChildren[index]);
+      renderGroupChildren[index].destroy();
+      Phaser.Utils.Array.Remove(this.children, this.children[index]);
+    })
+
+    return {
+      resetGroup,
+      lastMonsterData
+    };
+  }
 }
