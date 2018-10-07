@@ -50,54 +50,58 @@ function preload() {
     this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
 }
 
-function create() {
-    this.data.set('players', players);
-    const horizontalWalls = this.physics.add.staticGroup();
-    const verticalWalls = this.physics.add.staticGroup();
-    this.data.set('walls', [horizontalWalls, verticalWalls])
+function create () {
+  this.data.set('players', players);
+  const horizontalWalls = this.physics.add.staticGroup();
+  const verticalWalls = this.physics.add.staticGroup();
+  this.data.set('walls', [horizontalWalls, verticalWalls])
 
-    // player join listener
-    this.input.gamepad.on('down', function (pad, button, index) {
-        if (!players.has(pad)) {
-            const joinedPlayerAndMovement = joinPlayer.bind(this)(pad);
-            const { player } = joinedPlayerAndMovement;
-            player.playerNumber = players.size;
-            players.set(pad, joinedPlayerAndMovement);
-            displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-            creatureGroup.collidesWith(player);
-        }
-    }, this)
-
-    for (let i = 1; i <= 20; i++) {
-        horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
-        horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
-        verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
-        verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
+  // player join listener
+  this.input.gamepad.on('down', function (pad, button, index) {
+    if (!players.has(pad)) {
+      const joinedPlayerAndMovement = joinPlayer.bind(this)(pad);
+      const { player } = joinedPlayerAndMovement;
+      player.playerNumber = players.size;
+      players.set(pad, joinedPlayerAndMovement);
+      displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
+      creatureGroup.collidesWith(player);
     }
+  }, this)
 
-    // add animations
-    addAnimations(this);
+  for (let i = 1; i <= 20; i++) {
+    horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
+    horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
+    verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
+    verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
+  }
 
-    let creatures = [];
+  // add animations
+  addAnimations(this);
 
-    for (var i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(50, 1150);
-        const y = Phaser.Math.Between(50, 730);
+  let creatures = [];
 
-        let stats = genCreatureStats(1, 'shooter')
+  for (var i = 0; i < 10; i++) {
+    const x = Phaser.Math.Between(50, 1150);
+    const y = Phaser.Math.Between(50, 730);
 
-        creatures.push(new Creature(this, x, y, stats));
-    }
+    let type = Object.keys(archetypes)[Math.floor(Math.random() * Object.keys(archetypes).length)]
+    let typeData = archetypes[type]
 
-    creatureGroup = new DynamicGroup(this, creatures);
-    creatureGroup.collidesWith(horizontalWalls);
-    creatureGroup.collidesWith(verticalWalls);
+    // TODO update level based on wave, etc.
+    let stats = genCreatureStats(1, type)
 
-    bullets = this.add.group({
-      classType: Bullet,
-      maxSize: 100,
-      runChildUpdate: true
-    })
+    creatures.push(new Creature(this, x, y, stats, typeData.color));
+  }
+
+  creatureGroup = new DynamicGroup(this, creatures);
+  creatureGroup.collidesWith(horizontalWalls);
+  creatureGroup.collidesWith(verticalWalls);
+
+  bullets = this.add.group({
+    classType: Bullet,
+    maxSize: 100,
+    runChildUpdate: true
+  })
 }
 
 function update(time, delta) {
@@ -137,6 +141,7 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
     let { speed, angle } = player.dash
     movement.updateMovement(speed * DASH_FACTOR, angle)
   }
+
   // abstract out gun cooldown (150)
   if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
     let bullet = bullets.get()

@@ -2,24 +2,38 @@ import getStats from '../stats'
 import archetypes from '../archetypes.js'
 import Cursors from './player-movement.js'
 
-export function createPlayer (scene, archetype = archetypes.shooter) {
-  const startingLevel = 6;
-  let player = scene.physics.add.sprite(scene.game.canvas.width / 2, scene.game.canvas.height / 2, 'dude')
-    .setOrigin(0.5, 0.5);
-  player.stats = getStats(startingLevel, archetype.modifiers)
-  player.stats.maxHealth = player.stats.health;
-  player.stats.level = startingLevel;
+export const startingLevel = 6
 
-  player.setCollideWorldBounds(true);
+export function createPlayer (scene, type = 'shooter') {
+  let player = scene.physics.add.sprite(
+    scene.game.canvas.width / 2,
+    scene.game.canvas.height / 2,
+    'dude'
+  ).setOrigin(0.5, 0.5);
+
+  player.update = (level, newType) => updatePlayer(player, level, newType)
 
   // physics interactions
+  player.setCollideWorldBounds(true);
+
   const walls = scene.data.get('walls');
   walls.forEach(wall => {
     scene.physics.add.collider(player, wall)
   });
 
+  player.update(startingLevel, type)
   return player;
 };
+
+export function updatePlayer (player, level, type) {
+  const archetype = archetypes[type]
+  player.stats = getStats(level, archetype.modifiers)
+  player.stats.maxHealth = player.stats.health;
+  player.stats.level = level;
+  player.setTint(archetype.color)
+
+  return player
+}
 
 export function joinPlayer(pad) {
     let player = createPlayer(this);
