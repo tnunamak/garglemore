@@ -42,15 +42,16 @@ class Main extends Phaser.Scene {
     this.input.gamepad.on('down', function (pad, button, index) {
       if (!players.has(pad)) {
         const joinedPlayerAndMovement = joinPlayer.bind(this)(pad);
+        const { player, movement } = joinedPlayerAndMovement;
 
         // TODO: Apply this at the right time.
         joinedPlayerAndMovement.gun = mechanics.getGun(bullets, 50)
+        joinedPlayerAndMovement.dashPower = mechanics.getDashPower(player, 150)
 
-        const { player } = joinedPlayerAndMovement;
         player.playerNumber = players.size;
         players.set(pad, joinedPlayerAndMovement);
         displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-        timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this);
+        timer = this.time.delayedCall(1400, addNewCreatureGroup, [], this);
       }
     }, this)
 
@@ -93,7 +94,7 @@ class Main extends Phaser.Scene {
     if (!players.size) {
       return
     }
-    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
+    players.forEach((playerData, gamepad) => updatePlayer.bind(this)(playerData, gamepad, time, delta))
     // creatures
     if (creatureGroup) {
       creatureGroup.removeDeadChildren();
@@ -113,25 +114,19 @@ class Main extends Phaser.Scene {
   }
 }
 
-function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
-  movement.updateGamepadMovement(gamepad);
-
-  // display
+function updatePlayer({ player, movement, gun, dashPower }, gamepad, time, delta) {
   updateDisplay(player);
 
-  if (gamepad.A && !player.dash && player.canDash !== false) {
-    movement.updateDashStatus(player, gamepad);
-    if (creatureGroup) {
-      creatureGroup.damageByDash(player);
-    }
+  let movementFromInput = true
+  if (dashPower && gamepad.A && !dashPower.dashActive) {
+    // todo is creatureGroupChildren correct?
+    dashPower.start(this, movement.getGamepadMovement(gamepad).angle, player, creatureGroup && creatureGroup.children)
+  }
+  else if (dashPower) {
+    movementFromInput = !dashPower.update()
   }
 
-  if (player.dash) {
-    const DASH_FACTOR = 5
-    let { speed, angle } = player.dash
-
-    movement.updateMovement(speed * DASH_FACTOR, angle)
-  }
+  movementFromInput && movement.updateGamepadMovement(gamepad);
 
   if (gun && gamepad.R2) {
     gun.fire(player.x, player.y, gamepad.rightStick.angle())
@@ -140,7 +135,6 @@ function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
 
 function updatePlayerForWave(playerData, gamepad, time, delta) {
   let player = playerData.player
-  console.log(player)
   if(! player.lastKilled)
     return;
   player.stats.level += 1
