@@ -14,47 +14,51 @@ function genCreatureStats(level, type) {
 }
 
 var config = {
-    type: Phaser.AUTO,
-    width: 1200,
-    height: 780,
-    input: {
-        gamepad: true
-    },
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { x: 0, y: 0 },
-            debug: true
-        }
-    },
-    scene: [{
-        preload: preload,
-        create: create,
-        update: update
-    }]
+  type: Phaser.AUTO,
+  width: 1200,
+  height: 780,
+  input: {
+    gamepad: true
+  },
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { x: 0, y: 0 },
+      debug: true
+    }
+  },
+  scene: [{
+    preload: preload,
+    create: create,
+    update: update
+  }]
 };
 
-var creatureGroup;
+let creatureGroup;
 let displayStats = [];
 let bullets;
 let players = new Map();
+let timer;
+let timerText;
+
 let game = new Phaser.Game(config);
 
 function preload() {
-    this.load.image('star', 'public/assets/star.png');
-    this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
-    this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
-    this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
-    this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
+  this.load.image('star', 'public/assets/star.png');
+  this.load.image('horizontal_wall', 'public/assets/images/basic-wall-30x60.png')
+  this.load.image('vertical_wall', 'public/assets/images/vertical-wall-60x30.png')
+  this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+  this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
 
-    this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
+  this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
 }
 
-function create () {
+function create() {
   this.data.set('players', players);
   const horizontalWalls = this.physics.add.staticGroup();
   const verticalWalls = this.physics.add.staticGroup();
   this.data.set('walls', [horizontalWalls, verticalWalls])
+  timerText = this.add.text(640 - 36, 320, '', { font: '96px Courier', fill: '#00ff00' });
 
   // player join listener
   this.input.gamepad.on('down', function (pad, button, index) {
@@ -64,9 +68,25 @@ function create () {
       player.playerNumber = players.size;
       players.set(pad, joinedPlayerAndMovement);
       displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-      creatureGroup.collidesWith(player);
+      timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this);
     }
   }, this)
+
+  this.input.gamepad.on('down', function (pad, button, index) {
+    if (button.index === 2) {
+      if (!creatureGroup) return;
+      let creatureGroupChildren = creatureGroup.renderGroup.getChildren();
+      let removalIndices = [];
+      for (let [index, child] of creatureGroupChildren.entries()) {
+        removalIndices.push(index);
+      };
+      removalIndices = removalIndices.reverse();
+      removalIndices.forEach(index => {
+        creatureGroupChildren[index].destroy();
+        Phaser.Utils.Array.Remove(creatureGroup.children, creatureGroup.children[index]);
+      })
+    }
+  })
 
   for (let i = 1; i <= 20; i++) {
     horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
@@ -75,9 +95,82 @@ function create () {
     verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
   }
 
-  // add animations
-  addAnimations(this);
+  bullets = this.add.group({
+    classType: Bullet,
+    maxSize: 100,
+    runChildUpdate: true
+  })
+}
 
+function update(time, delta) {
+  if (!players.size) {
+    return
+  }
+  players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta, this))
+}
+
+function updatePlayer({ player, movement }, gamepad, time, delta, scene) {
+  movement.updateGamepadMovement(gamepad);
+  // creatures
+  if (creatureGroup) {
+    const waveData = creatureGroup.isEveryChildDestroyed();
+    if (!waveData.resetGroup) {
+      creatureGroup.moveTowards(player);
+    }
+    else {
+      console.log(!timer || isTimerComplete())
+      if (!timer || isTimerComplete()) {
+        // use last monster data
+
+        // create new wave and replace
+        timer = scene.time.delayedCall(3000, addNewCreatureGroup, [], scene)
+      }
+    }
+  }
+
+  // display
+  updateDisplay(player);
+
+  if (gamepad.A && !player.dash && player.canDash !== false) {
+    movement.updateDashStatus(player, gamepad);
+  }
+
+  if (player.dash) {
+    const DASH_FACTOR = 5
+    let { speed, angle } = player.dash
+    movement.updateMovement(speed * DASH_FACTOR, angle)
+  }
+  // abstract out gun cooldown (150)
+  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
+    let bullet = bullets.get()
+    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
+
+    if (bullet) {
+      player.lastFired = time
+      player.lastFireAngle = angle
+      bullet.fire(player.x, player.y, angle)
+    }
+  }
+}
+
+function updateDisplay(player) {
+  displayStats[player.playerNumber].setText([
+    `Player ${player.playerNumber}`,
+    `Level: ${player.stats.level - 5}`,
+    `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+    `Speed: ${player.stats.speed}`,
+    `Attack: ${player.stats.attack}`,
+    player.archetype ? `Archetype: ${player.archetype}` : null,
+  ]);
+
+  if (timer && timer.getProgress() !== 1) {
+    timerText.setText((timer.getProgress() * 3).toString().substr(0, 1));
+  } else {
+    timerText.setText('');
+  }
+}
+
+function addNewCreatureGroup(scene = this) {
   let creatures = [];
 
   for (var i = 0; i < 10; i++) {
@@ -93,64 +186,13 @@ function create () {
     creatures.push(new Creature(this, x, y, stats, typeData.color));
   }
 
-  creatureGroup = new DynamicGroup(this, creatures);
-  creatureGroup.collidesWith(horizontalWalls);
-  creatureGroup.collidesWith(verticalWalls);
+  creatureGroup = new DynamicGroup(scene, creatures);
+  scene.data.get('walls').forEach(wall => creatureGroup.collidesWith(wall));
+  scene.data.get('players').forEach(player => creatureGroup.collidesWith(player));
 
-  bullets = this.add.group({
-    classType: Bullet,
-    maxSize: 100,
-    runChildUpdate: true
-  })
+  timer = undefined;
 }
 
-function update(time, delta) {
-    if (!players.size) {
-        return
-    }
-    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
-}
-
-function updatePlayer({ player, movement }, gamepad, time, delta) {
-  movement.updateGamepadMovement(gamepad);
-  creatureGroup.moveTowards(player);
-
-  //display
-  displayStats[player.playerNumber].setText([
-    `Player ${player.playerNumber}`,
-    `Level: ${player.stats.level - 5}`,
-    `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-    `Speed: ${player.stats.speed}`,
-    `Attack: ${player.stats.attack}`,
-    player.archetype ? `Archetype: ${player.archetype}` : null,
-  ]);
-
-  if (gamepad.A && !player.dash && player.canDash !== false) {
-    player.body.checkCollision.none = true
-    player.dash = movement.getGamepadMovement(gamepad)
-    player.canDash = false
-    setTimeout(() => {
-      delete player.dash
-      player.body.checkCollision.none = false
-    }, 64)
-    setTimeout(() => player.canDash = true, 300)
-  }
-
-  if (player.dash) {
-    const DASH_FACTOR = 5
-    let { speed, angle } = player.dash
-    movement.updateMovement(speed * DASH_FACTOR, angle)
-  }
-
-  // abstract out gun cooldown (150)
-  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
-    let bullet = bullets.get()
-    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
-
-    if (bullet) {
-      player.lastFired = time
-      player.lastFireAngle = angle
-      bullet.fire(player.x, player.y, angle)
-    }
-  }
+function isTimerComplete() {
+  return timer.getProgress() === 1;
 }

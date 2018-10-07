@@ -80,5 +80,9 @@ export default class Creature{
     }
 
     return this.stats.speed;
-  }
+	}
+	
+	isHealthy() {
+		return this.stats.health >= 0;
+	}
 }
