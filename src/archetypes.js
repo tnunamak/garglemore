@@ -56,14 +56,13 @@ export default {
       stepToward: (self, enemies) => {
         return chooseMove(self, enemies, SHOOTER_DISTANCE)
       },
-      attack: (self, enemies) => {
+      attack: (self, players) => {
         if (!self.gun) {
           return
         }
 
-        const target = closestTarget(self.sprite, enemies)
-
-        self.gun.fire(self.sprite.x, self.sprite.y, vectorTowards(self.sprite, target).angle())
+        const target = closestTarget(self.sprite, players)
+        self.gun.fireAtPlayers(self, players, vectorTowards(self.sprite, target).angle())
       }
     }
   },
@@ -77,13 +76,16 @@ export default {
     },
     ai: {
       setup: (self, scene) => {
-        self.dashPower = mechanics.getDashPower(self.sprite, DASHER_COOLDOWN)
         self.scene = scene
       },
       stepToward: (self, enemies) => {
         return chooseMove(self, enemies, DASHER_DISTANCE)
       },
       attack: (self, enemies) => {
+        if (!self.dashPower) {
+          self.dashPower = mechanics.getDashPower(self.sprite, DASHER_COOLDOWN)
+        }
+
         if (self.dashPower.dashActive) {
           self.dashPower.update()
         } else {
