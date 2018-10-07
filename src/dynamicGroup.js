@@ -98,8 +98,8 @@ export default class DynamicGroup {
 
   damageByDash(attacker){
     for (var childIdx = this.children.length - 1; childIdx >= 0; childIdx--) {
-      let child     = this.children[childIdx]
-      let collider  = this.scene.physics.add.overlap(attacker, child.sprite, this.dashDamageDefender(child))
+      let child = this.children[childIdx]
+      let collider = this.scene.physics.add.overlap(attacker, child.sprite, this.dashDamageDefender(child))
       child.collider = collider
       child.collider.hasActivated = false
 
