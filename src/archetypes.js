@@ -99,17 +99,8 @@ export default {
     }
   },
   grenadier: {
-    color: 0x0000ff,
-    name: "Grenadier",
-    modifiers: {
-      health: 0.03,
-      speed: 0.06,
-      attack: 0.005
-    }
-  },
-  kamikaze: {
     color: 0xffff00,
-    name: "Kamikaze",
+    name: "Laserbeast",
     modifiers: {
       health: 0.03,
       speed: 0.06,
