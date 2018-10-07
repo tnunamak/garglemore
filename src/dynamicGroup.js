@@ -22,10 +22,29 @@ export default class DynamicGroup {
     this.scene.physics.add.collider(renderGroup, this.renderGroup);
   }
 
-  moveTowards(renderObj){
+  updateMovement(targetSprites) {
+    this.forEach(child => {
+      if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
+        const vector = child.archetype.ai.stepToward(child, targetSprites)
+        child.moveInDirection(vector)
+      }
+      else {
+        // TODO choose the closest one by default
+        child.moveTowards(targetSprites[0])
+      }
+    })
+  }
+
+  forEach(fn) {
     for (var childIdx = 0; childIdx < this.children.length; childIdx++) {
       let child = this.children[childIdx];
-      child.moveTowards(renderObj);
+      fn(child)
     }
+  }
+
+  moveTowards(renderObj){
+    this.forEach(function (child) {
+      child.moveTowards(renderObj);
+    })
   }
 }

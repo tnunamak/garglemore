@@ -1,7 +1,18 @@
 import constants from './constants';
+import archetypes from './archetypes'
+import getStats from './stats'
+
+function genCreatureStats(level, type) {
+  return getStats(level, archetypes[type].modifiers)
+}
 
 export default class Creature{
-  constructor(scene, x, y, stats, tint) {
+  constructor(scene, x, y, level, type) {
+    let stats = genCreatureStats(level, type)
+
+    this.archetype = archetypes[type]
+    let tint = this.archetype.color
+
     this.scene 	= scene;
     this.sprite = scene.physics.add.sprite(x, y, 'zombie');
     this.stats 	= stats;
@@ -25,6 +36,12 @@ export default class Creature{
     }
 
     return statSum + 1;
+  }
+
+  moveInDirection(vector) {
+    vector = vector.scale(this.getSpeedInPx())
+    this.sprite.setVelocityX(vector.x)
+    this.sprite.setVelocityY(vector.y)
   }
 
   moveTowards(renderObj){
@@ -62,23 +79,12 @@ export default class Creature{
   }
 
   getSpeedInPx(){
-    const SPEED_UNIT_PX 	= constants.monsterBaseSpeed;
+    const SPEED_UNIT_PX = constants.monsterBaseSpeed;
 
     return this.getSpeed() * SPEED_UNIT_PX;
   }
 
   getSpeed(){
-    const MAX_SPEED_PCT 	= 0.6;
-    const MIN_SPEED_PCT 	= 0.2;
-
-    if (this.stats.speed > MAX_SPEED_PCT) {
-      return MAX_SPEED_PCT;
-    }
-
-    if (this.stats.speed < MIN_SPEED_PCT) {
-      return MIN_SPEED_PCT;
-    }
-
-    return this.stats.speed;
+    return Phaser.Math.Clamp(this.stats.speed, 0.2, 0.6);
   }
 }

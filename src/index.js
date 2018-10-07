@@ -85,12 +85,9 @@ function create () {
     const y = Phaser.Math.Between(50, 730);
 
     let type = Object.keys(archetypes)[Math.floor(Math.random() * Object.keys(archetypes).length)]
-    let typeData = archetypes[type]
 
     // TODO update level based on wave, etc.
-    let stats = genCreatureStats(1, type)
-
-    creatures.push(new Creature(this, x, y, stats, typeData.color));
+    creatures.push(new Creature(this, x, y, 1, type));
   }
 
   creatureGroup = new DynamicGroup(this, creatures);
@@ -109,6 +106,7 @@ function update(time, delta) {
         return
     }
     players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
+    creatureGroup.updateMovement(Array.from(players.values()).map(playerData => playerData.player))
 }
 
 function updatePlayer({ player, movement }, gamepad, time, delta) {
