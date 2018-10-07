@@ -42,14 +42,14 @@ export default {
     color: 0xff0000,
     name: "Shooter",
     modifiers: {
-      health: 0.03,
+      health: 0.015,
       speed: 0.06,
-      attack: 0.005
+      attack: 0.002
     },
     ai: {
       setup: (self, scene) => {
         // 150 is the cooldown
-        self.gun = mechanics.getGun(scene.data.get('bullets'), 150)
+        self.gun = mechanics.getGun(scene.data.get('bullets'), 250)
       },
       // Returns a unit vector in the direction movement should occur. Returns
       // the zero vector if movement is not necessary.
@@ -70,9 +70,9 @@ export default {
     color: 0x00ff00,
     name: "Dasher",
     modifiers: {
-      health: 0.03,
+      health: 0.015,
       speed: 0.06,
-      attack: 0.005
+      attack: 0.003
     },
     ai: {
       setup: (self, scene) => {
@@ -100,7 +100,7 @@ export default {
       }
     }
   },
-/*  grenadier: {
+  grenadier: {
     color: 0xffff00,
     name: "Laserbeast",
     modifiers: {
@@ -108,5 +108,5 @@ export default {
       speed: 0.06,
       attack: 0.005
     }
-  }*/
+  }
 }

@@ -201,7 +201,7 @@ function determineNewMonsterLevel(scene) {
     if (stats.level > level) level = stats.level;
   });
 
-  const addToLevel = Phaser.Utils.Array.RemoveRandomElement([1, 2, 3]);
+  const addToLevel = Phaser.Utils.Array.RemoveRandomElement([0, 1, 2]);
   return level + addToLevel;
 }
 
