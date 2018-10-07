@@ -29,9 +29,16 @@ class Main extends Phaser.Scene {
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
     this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
+    this.load.audio('theme', [
+      'public/assets/audio/oedipus_wizball_highscore.ogg',
+      'public/assets/audio/oedipus_wizball_highscore.mp3'
+    ]);
   }
 
   create() {
+    const music = this.sound.add('theme');
+    music.play();
+
     this.data.set('players', players);
     const horizontalWalls = this.physics.add.staticGroup();
     const verticalWalls = this.physics.add.staticGroup();
@@ -71,13 +78,15 @@ class Main extends Phaser.Scene {
       }
     })
 
-    for (let i = 1; i <= 20; i++) {
-      horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
-      horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
-      verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
-      verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
+    for (let i = 1; i <= 11; i++) {
+      verticalWalls.create(44, i * 60 + 30, 'vertical_wall');
+      verticalWalls.create(1156, i * 60 + 30, 'vertical_wall');
     }
-
+    for( let i = 1; i <= 18; i++) {
+      horizontalWalls.create(i * 60 + 30, 76, 'horizontal_wall');
+      horizontalWalls.create(i * 60 + 30, 704, 'horizontal_wall');
+    }
+    
     // add animations
     addAnimations(this);
 
