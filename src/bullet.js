@@ -1,3 +1,6 @@
+import { damagePlayer } from './player/player-stats'
+import constants from './constants';
+
 export default new Phaser.Class({
   Extends: Phaser.Physics.Arcade.Sprite,
 
@@ -26,14 +29,18 @@ export default new Phaser.Class({
     this.setVisible(true);
     for (var i = 0; i < targetSprites.length; i++) {
       let playerSprite = targetSprites[i];
-      let collider  = this.scene.physics.add.collider(this, playerSprite, this.callbackFunction(creature));
+      let collider  = this.scene.physics.add.collider(this, playerSprite, this.bulletHitsPlayer(creature));
     }
   },
 
-  callbackFunction: function (creature){
+  bulletHitsPlayer: function (creature){
+    let bullet = this
     return function(bullet, player){
-      // console.log("HIT", [player, creature]); 
-      // TODO
+      let attackDamage = creature.stats.attack * constants.bulletDamageFactor
+      damagePlayer(player, attackDamage)
+
+      bullet.setActive(false);
+      bullet.setVisible(false);
     } 
   },
 
