@@ -57,14 +57,14 @@ class Main extends Phaser.Scene {
     this.input.gamepad.on('down', function (pad, button, index) {
       if (button.index === 2) {
         if (!creatureGroup) return;
-        let creatureGroupChildren = creatureGroup.renderGroup.getChildren();
+        let creatureGroupChildren = creatureGroup.children;
         let removalIndices = [];
         for (let [index, child] of creatureGroupChildren.entries()) {
           removalIndices.push(index);
         };
         removalIndices = removalIndices.reverse();
         removalIndices.forEach(index => {
-          creatureGroupChildren[index].destroy();
+          if (creatureGroup.renderGroup[index]) creatureGroupChildren[index].destroy();
           Phaser.Utils.Array.Remove(creatureGroup.children, creatureGroup.children[index]);
         })
       }
@@ -106,7 +106,7 @@ class Main extends Phaser.Scene {
           players.forEach((playerData, gamepad) => updatePlayerForWave(playerData, gamepad, time, delta))
 
           // create new wave and replace
-          timer = this.time.delayedCall(3000, addNewCreatureGroup, [], this)
+          timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this)
         }
       }
     }
@@ -164,7 +164,7 @@ function updateDisplay(player) {
   ]);
 
   if (timer && timer.getProgress() !== 1) {
-    timerText.setText((timer.getProgress() * 3).toString().substr(0, 1));
+    timerText.setText((timer.getProgress() * 4).toString().substr(0, 1));
   } else {
     timerText.setText('');
   }
@@ -188,6 +188,7 @@ function addNewCreatureGroup(scene = this) {
   creatureGroup = new DynamicGroup(scene, creatures);
   scene.data.get('walls').forEach(wall => creatureGroup.collidesWith(wall));
   scene.data.get('players').forEach(player => creatureGroup.collidesWith(player));
+  spawnWavesOfCreatures(creatureGroup);
 
   timer = undefined;
 }
@@ -202,6 +203,26 @@ function determineNewMonsterLevel(scene) {
 
   const addToLevel = Phaser.Utils.Array.RemoveRandomElement([1, 2, 3]);
   return level + addToLevel;
+}
+
+function spawnWavesOfCreatures(creatureGroup) {
+  const batchCount = 3;
+  // array[Math.floor(Math.random() * array.length)]
+  const totalLength = creatureGroup.children.filter((child) => !child.isRendered).length;
+  for (let i = 0; i < batchCount; i++) {
+    setTimeout(() => {
+      // get all unrendered children
+      let unrenderedChildren = creatureGroup.children.filter((child) => !child.isRendered);
+      const isLastBatch = i === batchCount - 1;
+      let jlast = totalLength / batchCount;
+      if (isLastBatch) jlast = unrenderedChildren.length;
+      for (let j = 0; j < jlast; j++) {
+        const child = Phaser.Utils.Array.RemoveRandomElement(unrenderedChildren);
+        child.renderSelf();
+        creatureGroup.addChildToRenderGroup(child)
+      }
+    }, 4000 * i)
+  }
 }
 
 function isTimerComplete() {
