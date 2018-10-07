@@ -31,14 +31,13 @@ export default class DynamicGroup {
 
 	isEveryChildDestroyed() {
 		let resetGroup = true;
-
+		let lastMonsterData;
 		let renderGroupChildren = this.renderGroup.getChildren()
 		let removalIndices = [];
 		for (let [index, child] of this.children.entries()) {
 			let childIsHealthy = child.isHealthy();
 			if (childIsHealthy) {
 				resetGroup = false;
-				console.log('all good')
 				break;
 			}
 
@@ -48,10 +47,14 @@ export default class DynamicGroup {
 
 		removalIndices = removalIndices.reverse();
 		removalIndices.forEach(index => {
+			lastMonsterData = Object.assign(renderGroupChildren[index]);
 			renderGroupChildren[index].destroy();
 			Phaser.Utils.Array.Remove(this.children, this.children[index]);
 		})
 
-		return resetGroup;
+		return {
+			resetGroup,
+			lastMonsterData
+		};
 	}
 }
