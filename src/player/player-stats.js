@@ -14,7 +14,7 @@ export function damagePlayer (player, attackDamage) {
       return
     }
 
-    player.stats.health = player.stats.health - attackDamage
+    player.stats.health = Math.round(player.stats.health - attackDamage)
 }
 
 export function isPlayerDead (player){
