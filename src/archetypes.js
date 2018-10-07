@@ -30,6 +30,7 @@ module.exports = {
         const closeEnough = closestDistance <= (SHOOTER_DISTANCE * SHOOTER_DISTANCE)
 
         const vectorTowards = new Phaser.Math.Vector2(closest.x - self.sprite.x, closest.y - self.sprite.y).normalize()
+        self.animateMovement(self.sprite)
 
         return closeEnough ? Phaser.Math.Vector2.ZERO : vectorTowards
       },
