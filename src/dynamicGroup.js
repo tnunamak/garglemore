@@ -1,5 +1,6 @@
 import constants from './constants';
- 
+import { closestTarget } from './archetypes'
+
 export default class DynamicGroup {
   constructor(scene, children) {
     this.scene = scene;
@@ -16,6 +17,10 @@ export default class DynamicGroup {
   }
 
   addChild(child) {
+    if (child.archetype && child.archetype.ai && child.archetype.ai.setup) {
+      child.archetype.ai.setup(child, this.scene)
+    }
+
     this.children.push(child);
     this.renderGroup.add(child.sprite, false);
   }
@@ -24,17 +29,31 @@ export default class DynamicGroup {
     this.scene.physics.add.collider(renderGroup, this.renderGroup);
   }
 
-  updateMovement(targetSprites) {
+  update (targetSprites) {
     this.forEach(child => {
-      if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
-        const vector = child.archetype.ai.stepToward(child, targetSprites)
-        child.moveInDirection(vector)
-      }
-      else {
-        // TODO choose the closest one by default
-        child.moveTowards(targetSprites[0])
+      const movementVector = this.updateMovement(child, targetSprites)
+      if (movementVector && (movementVector.x === 0 && movementVector.y === 0)) {
+        this.updateAttack(child, targetSprites)
       }
     })
+  }
+
+  updateAttack(child, targetSprites) {
+    if (child.archetype && child.archetype.ai && child.archetype.ai.attack) {
+      child.archetype.ai.attack(child, targetSprites)
+    }
+  }
+
+  updateMovement(child, targetSprites) {
+    if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
+      const vector = child.archetype.ai.stepToward(child, targetSprites)
+      child.moveInDirection(vector)
+
+      return vector
+    }
+    else {
+      child.moveTowards(closestTarget(self, targetSprites))
+    }
   }
 
   forEach(fn) {
