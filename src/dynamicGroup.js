@@ -15,7 +15,9 @@ export default class DynamicGroup {
 
   addChild(child) {
     this.children.push(child);
-    this.renderGroup.add(child.sprite, false);
+    if (child.isRendered) {
+      this.renderGroup.add(child.sprite, false);
+    }
   }
 
   collidesWith(renderGroup) {
@@ -24,6 +26,7 @@ export default class DynamicGroup {
 
   updateMovement(targetSprites) {
     this.forEach(child => {
+      if (!child.sprite) return;
       if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
         const vector = child.archetype.ai.stepToward(child, targetSprites)
         child.moveInDirection(vector)
@@ -44,6 +47,7 @@ export default class DynamicGroup {
 
   moveTowards(renderObj){
     this.forEach(function (child) {
+      if (!child.sprite) return;
       child.moveTowards(renderObj);
     })
   }

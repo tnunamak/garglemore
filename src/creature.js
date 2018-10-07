@@ -11,14 +11,20 @@ export default class Creature{
     let stats = genCreatureStats(level, type)
 
     this.archetype = archetypes[type]
-    let tint = this.archetype.color
-
+    this.tint = this.archetype.color
     this.scene 	= scene;
-    this.sprite = scene.physics.add.sprite(x, y, 'zombie');
     this.stats 	= stats;
     this.scale 	= this.getScaleFromStats(stats);
+    this.isRendered = false;
+    this.initialCoords = { x, y };
+  }
+  
+  renderSelf() {
+    const { x, y } = this.initialCoords;
+    this.sprite = this.scene.physics.add.sprite(x, y, 'zombie');
     this.sprite.setScale(this.scale);
-    this.sprite.setTint(tint)
+    this.sprite.setTint(this.tint)
+    this.isRendered = true;
   }
 
   getScaleFromStats(statVals){
