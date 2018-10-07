@@ -34,7 +34,7 @@ var config = {
     }]
 };
 
-var creatureGroup;
+let creatureGroup;
 let displayStats = [];
 let bullets;
 let players = new Map();
@@ -64,9 +64,25 @@ function create() {
             player.playerNumber = players.size;
             players.set(pad, joinedPlayerAndMovement);
             displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-            creatureGroup.collidesWith(player);
+            addNewCreatureGroup(this);
         }
     }, this)
+
+    this.input.gamepad.on('down', function (pad, button, index) {
+        if (button.index === 2) {
+            if (!creatureGroup) return;
+            let creatureGroupChildren = creatureGroup.renderGroup.getChildren();
+            let removalIndices = [];
+            for (let [index, child] of creatureGroupChildren.entries()) {
+                removalIndices.push(index);
+            };
+            removalIndices = removalIndices.reverse();
+            removalIndices.forEach(index => {
+                creatureGroupChildren[index].destroy();
+                Phaser.Utils.Array.Remove(creatureGroup.children, creatureGroup.children[index]);
+            })
+        }
+    })
 
     for (let i = 1; i <= 20; i++) {
         horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
@@ -78,25 +94,10 @@ function create() {
     // add animations
     addAnimations(this);
 
-    let creatures = [];
-
-    for (var i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(50, 1150);
-        const y = Phaser.Math.Between(50, 730);
-
-        let stats = genCreatureStats(1, 'shooter')
-
-        creatures.push(new Creature(this, x, y, stats));
-    }
-
-    creatureGroup = new DynamicGroup(this, creatures);
-    creatureGroup.collidesWith(horizontalWalls);
-    creatureGroup.collidesWith(verticalWalls);
-
     bullets = this.add.group({
-      classType: Bullet,
-      maxSize: 100,
-      runChildUpdate: true
+        classType: Bullet,
+        maxSize: 100,
+        runChildUpdate: true
     })
 }
 
@@ -148,4 +149,25 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
       bullet.fire(player.x, player.y, angle)
     }
   }
+}
+
+function addNewCreatureGroup(scene) {
+    let creatures = [];
+
+    for (var i = 0; i < 10; i++) {
+        const x = Phaser.Math.Between(50, 1150);
+        const y = Phaser.Math.Between(50, 730);
+
+        let stats = {
+            health: Phaser.Math.Between(1, 100) / 100,
+            speed: Phaser.Math.Between(1, 100) / 100,
+            attack: Phaser.Math.Between(1, 100) / 100
+        }
+
+        creatures.push(new Creature(scene, x, y, stats, creatures.length));
+    }
+
+    creatureGroup = new DynamicGroup(scene, creatures);
+    scene.data.get('walls').forEach(wall => creatureGroup.collidesWith(wall));
+    scene.data.get('players').forEach(player => creatureGroup.collidesWith(player));
 }

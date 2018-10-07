@@ -2,12 +2,13 @@ import constants from './constants';
 
 export default class Creature{
 
-	constructor(scene, x, y, stats){
+	constructor(scene, x, y, stats, creatureIndex){
 		this.scene 	= scene;
 		this.sprite = scene.physics.add.sprite(x, y, 'zombie');
 		this.stats 	= stats;
 		this.scale 	= this.getScaleFromStats(stats);
 		this.sprite.setScale(this.scale);
+		this.creatureIndex = creatureIndex;
 	}
 
 	getScaleFromStats(statVals){	
@@ -80,5 +81,9 @@ export default class Creature{
 		}
 
 		return this.stats.speed;
+	}
+
+	isHealthy() {
+		return this.stats.health >= 0;
 	}
 }
