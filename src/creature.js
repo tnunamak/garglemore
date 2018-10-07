@@ -1,89 +1,94 @@
 import constants from './constants';
+import archetypes from './archetypes'
+import getStats from './stats'
+
+function genCreatureStats(level, type) {
+  return getStats(level, archetypes[type].modifiers)
+}
 
 export default class Creature{
+  constructor(scene, x, y, level, type) {
+    let stats = genCreatureStats(level, type)
 
-	constructor(scene, x, y, stats, creatureIndex){
-		this.scene 	= scene;
-		this.sprite = scene.physics.add.sprite(x, y, 'zombie');
-		this.stats 	= stats;
-		this.scale 	= this.getScaleFromStats(stats);
-		this.sprite.setScale(this.scale);
-		this.creatureIndex = creatureIndex;
-	}
+    this.archetype = archetypes[type]
+    let tint = this.archetype.color
 
-	getScaleFromStats(statVals){	
-		let statSum = 0.0;
+    this.scene 	= scene;
+    this.sprite = scene.physics.add.sprite(x, y, 'zombie');
+    this.stats 	= stats;
+    this.scale 	= this.getScaleFromStats(stats);
+    this.sprite.setScale(this.scale);
+    this.sprite.setTint(tint)
+  }
 
-		for(let statName in statVals){
-			let statRatio = statVals[statName] / constants.baseStatValue
-			if(statName == 'speed')
-			{
-				statRatio = statVals[statName] / constants.monsterBaseSpeed
-				statRatio = 1 - statRatio;
-			}
+  getScaleFromStats(statVals){
+    let statSum = 0.0;
 
-			statSum = statSum + statRatio;
-		}
+    for(let statName in statVals){
+      let statRatio = statVals[statName] / constants.baseStatValue
+      if(statName == 'speed')
+      {
+        statRatio = statVals[statName] / constants.monsterBaseSpeed
+        statRatio = 1 - statRatio;
+      }
 
-		return statSum + 1;
-	}
+      statSum = statSum + statRatio;
+    }
 
-	moveTowards(renderObj){
-		let pxSpeed = this.getSpeedInPx();
-		this.scene.physics.moveToObject(this.sprite, renderObj, pxSpeed);
-		this.animateMovement(renderObj);
-	}
+    return statSum + 1;
+  }
 
-	animateMovement(renderObj){
-		let direction = this.getMovementDirection(renderObj);
-      	this.sprite.anims.play('zombie-' + direction, true);
-	}
+  moveInDirection(vector) {
+    vector = vector.scale(this.getSpeedInPx())
+    this.sprite.setVelocityX(vector.x)
+    this.sprite.setVelocityY(vector.y)
+  }
 
-	getMovementDirection(renderObj){
-		let deltaX = renderObj.x - this.sprite.x;
-		let deltaY = renderObj.y - this.sprite.y;
-		
-		if(Math.abs(deltaX) <= Math.abs(deltaY) && deltaY < 0){
-			return 'up';
-		}
+  moveTowards(renderObj){
+    let pxSpeed = this.getSpeedInPx();
+    this.scene.physics.moveToObject(this.sprite, renderObj, pxSpeed);
+    this.animateMovement(renderObj);
+  }
 
-		if(Math.abs(deltaX) <= Math.abs(deltaY) && deltaY > 0){
-			return 'down';
-		}
+  animateMovement(renderObj){
+    let direction = this.getMovementDirection(renderObj);
+    this.sprite.anims.play('zombie-' + direction, true);
+  }
 
-		if (Math.abs(deltaY) <= Math.abs(deltaX) && deltaX > 0) {
-			return 'right';
-		}
+  getMovementDirection(renderObj){
+    let deltaX = renderObj.x - this.sprite.x;
+    let deltaY = renderObj.y - this.sprite.y;
 
-		if (Math.abs(deltaY) <= Math.abs(deltaX) && deltaX < 0) {
-			return 'left';
-		}
+    if(Math.abs(deltaX) <= Math.abs(deltaY) && deltaY < 0){
+      return 'up';
+    }
 
-		return 'down';
-	}
+    if(Math.abs(deltaX) <= Math.abs(deltaY) && deltaY > 0){
+      return 'down';
+    }
 
-	getSpeedInPx(){
-		const SPEED_UNIT_PX 	= constants.monsterBaseSpeed;
+    if (Math.abs(deltaY) <= Math.abs(deltaX) && deltaX > 0) {
+      return 'right';
+    }
 
-		return this.getSpeed() * SPEED_UNIT_PX;
-	}
+    if (Math.abs(deltaY) <= Math.abs(deltaX) && deltaX < 0) {
+      return 'left';
+    }
 
-	getSpeed(){
-		const MAX_SPEED_PCT 	= 0.6; 
-		const MIN_SPEED_PCT 	= 0.2; 
+    return 'down';
+  }
 
-		if (this.stats.speed > MAX_SPEED_PCT) {
-			return MAX_SPEED_PCT;
-		}
+  getSpeedInPx(){
+    const SPEED_UNIT_PX = constants.monsterBaseSpeed;
 
-		if (this.stats.speed < MIN_SPEED_PCT) {
-			return MIN_SPEED_PCT;
-		}
+    return this.getSpeed() * SPEED_UNIT_PX;
+  }
 
-		return this.stats.speed;
-	}
+  getSpeed(){
+    return Phaser.Math.Clamp(this.stats.speed, 0.2, 0.6);
+  }
 
-	isHealthy() {
-		return this.stats.health >= 0;
-	}
+  isHealthy() {
+    return this.stats.health >= 0;
+  }
 }
