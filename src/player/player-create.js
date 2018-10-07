@@ -1,6 +1,7 @@
 import getStats from '../stats'
 import archetypes from '../archetypes.js'
 import Cursors from './player-movement.js'
+import  * as playerStats from './player-stats'
 
 export const startingLevel = 6
 
@@ -12,12 +13,11 @@ export function createPlayer (scene, type = 'shooter') {
   ).setOrigin(0.5, 0.5);
 
   player.damage = amount => {
-    // TODO implement
-    console.log('ow')
+    playerStats.damagePlayer(player, amount)
   }
 
   player.isHealthy = () => {
-    // TODO implement
+    return !playerStats.isPlayerDead(player)
   }
 
   player.update = (level, newType) => updatePlayer(player, level, newType)
@@ -37,7 +37,7 @@ export function createPlayer (scene, type = 'shooter') {
 export function destroyPlayer(scene, player){
   alert('DEAD');
   console.log(scene.data.get('players'));
-  // Get by player number 
+  // Get by player number
   // Todo
 }
 
