@@ -56,14 +56,13 @@ export default {
       stepToward: (self, enemies) => {
         return chooseMove(self, enemies, SHOOTER_DISTANCE)
       },
-      attack: (self, enemies) => {
+      attack: (self, players) => {
         if (!self.gun) {
           return
         }
 
-        const target = closestTarget(self.sprite, enemies)
-
-        self.gun.fire(self.sprite.x, self.sprite.y, vectorTowards(self.sprite, target).angle())
+        const target = closestTarget(self.sprite, players)
+        self.gun.fireAtPlayers(self, players, vectorTowards(self.sprite, target).angle())
       }
     }
   },

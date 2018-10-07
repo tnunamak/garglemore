@@ -34,6 +34,13 @@ export function createPlayer (scene, type = 'shooter') {
   return player;
 };
 
+export function destroyPlayer(scene, player){
+  alert('DEAD');
+  console.log(scene.data.get('players'));
+  // Get by player number 
+  // Todo
+}
+
 export function updatePlayer (player, level, type) {
   const archetype   = archetypes[type]
   player.stats      = getStats(level, archetype.modifiers)
