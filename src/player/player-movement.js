@@ -60,15 +60,6 @@ export default class playerMovement {
     }
   }
 
-  updateDashStatus (player, gamepad) {
-    player.dash = this.getGamepadMovement(gamepad)
-    player.canDash = false
-    setTimeout(() => {
-      delete player.dash
-    }, 64)
-    setTimeout(() => player.canDash = true, 300)
-  }
-
   // deprecated
   oldCheckMovement () {
     if (this.cursors.left.isDown) {

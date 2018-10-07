@@ -22,6 +22,9 @@ export default class DynamicGroup {
     }
 
     this.children.push(child);
+  }
+
+  addChildToRenderGroup(child) {
     this.renderGroup.add(child.sprite, false);
   }
 
@@ -31,6 +34,7 @@ export default class DynamicGroup {
 
   update (targetSprites) {
     this.forEach(child => {
+      if (!child.sprite) return;      
       const movementVector = this.updateMovement(child, targetSprites)
       if (movementVector && (movementVector.x === 0 && movementVector.y === 0)) {
         this.updateAttack(child, targetSprites)
@@ -65,6 +69,7 @@ export default class DynamicGroup {
 
   moveTowards(renderObj){
     this.forEach(function (child) {
+      if (!child.sprite) return;
       child.moveTowards(renderObj);
     })
   }
@@ -85,15 +90,16 @@ export default class DynamicGroup {
 
     removalIndices = removalIndices.reverse();
     removalIndices.forEach(index => {
-      renderGroupChildren[index].destroy();
-      Phaser.Utils.Array.Remove(this.children, this.children[index]);
+      let child = this.children[index];
+      renderGroupChildren.find(renderChild => renderChild.uniqueId === child.uniqueId).destroy();
+      Phaser.Utils.Array.Remove(this.children, child);
     })
   }
 
   damageByDash(attacker){
     for (var childIdx = this.children.length - 1; childIdx >= 0; childIdx--) {
-      let child     = this.children[childIdx]
-      let collider  = this.scene.physics.add.overlap(attacker, child.sprite, this.dashDamageDefender(child))
+      let child = this.children[childIdx]
+      let collider = this.scene.physics.add.overlap(attacker, child.sprite, this.dashDamageDefender(child))
       child.collider = collider
       child.collider.hasActivated = false
 

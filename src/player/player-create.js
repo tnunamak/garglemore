@@ -11,6 +11,15 @@ export function createPlayer (scene, type = 'shooter') {
     'dude'
   ).setOrigin(0.5, 0.5);
 
+  player.damage = amount => {
+    // TODO implement
+    console.log('ow')
+  }
+
+  player.isHealthy = () => {
+    // TODO implement
+  }
+
   player.update = (level, newType) => updatePlayer(player, level, newType)
 
   // physics interactions
