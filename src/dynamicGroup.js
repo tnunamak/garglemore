@@ -1,3 +1,6 @@
+import constants from './constants';
+import { closestTarget } from './archetypes'
+
 export default class DynamicGroup {
   constructor(scene, children) {
     this.scene = scene;
@@ -14,6 +17,10 @@ export default class DynamicGroup {
   }
 
   addChild(child) {
+    if (child.archetype && child.archetype.ai && child.archetype.ai.setup) {
+      child.archetype.ai.setup(child, this.scene)
+    }
+
     this.children.push(child);
     if (child.isRendered) {
       this.renderGroup.add(child.sprite, false);
@@ -24,18 +31,32 @@ export default class DynamicGroup {
     this.scene.physics.add.collider(renderGroup, this.renderGroup);
   }
 
-  updateMovement(targetSprites) {
+  update (targetSprites) {
     this.forEach(child => {
-      if (!child.sprite) return;
-      if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
-        const vector = child.archetype.ai.stepToward(child, targetSprites)
-        child.moveInDirection(vector)
-      }
-      else {
-        // TODO choose the closest one by default
-        child.moveTowards(targetSprites[0])
+      if (!child.sprite) return;      
+      const movementVector = this.updateMovement(child, targetSprites)
+      if (movementVector && (movementVector.x === 0 && movementVector.y === 0)) {
+        this.updateAttack(child, targetSprites)
       }
     })
+  }
+
+  updateAttack(child, targetSprites) {
+    if (child.archetype && child.archetype.ai && child.archetype.ai.attack) {
+      child.archetype.ai.attack(child, targetSprites)
+    }
+  }
+
+  updateMovement(child, targetSprites) {
+    if (child.archetype && child.archetype.ai && child.archetype.ai.stepToward) {
+      const vector = child.archetype.ai.stepToward(child, targetSprites)
+      child.moveInDirection(vector)
+
+      return vector
+    }
+    else {
+      child.moveTowards(closestTarget(self, targetSprites))
+    }
   }
 
   forEach(fn) {
@@ -52,32 +73,56 @@ export default class DynamicGroup {
     })
   }
 
+
   isEveryChildDestroyed() {
-    let resetGroup = true;
-    let lastMonsterData;
+    return this.children.length === 0;
+  }
+
+  removeDeadChildren(){
     let renderGroupChildren = this.renderGroup.getChildren()
     let removalIndices = [];
     for (let [index, child] of this.children.entries()) {
-      let childIsHealthy = child.isHealthy();
-      if (childIsHealthy) {
-        resetGroup = false;
-        break;
+      if (! child.isHealthy()) {
+        removalIndices.push(index);
       }
-
-      // if child is NOT healthy, destroy
-      removalIndices.push(index);
     };
 
     removalIndices = removalIndices.reverse();
     removalIndices.forEach(index => {
-      lastMonsterData = Object.assign(renderGroupChildren[index]);
       renderGroupChildren[index].destroy();
       Phaser.Utils.Array.Remove(this.children, this.children[index]);
     })
-
-    return {
-      resetGroup,
-      lastMonsterData
-    };
   }
+
+  damageByDash(attacker){
+    for (var childIdx = this.children.length - 1; childIdx >= 0; childIdx--) {
+      let child     = this.children[childIdx]
+      let collider  = this.scene.physics.add.overlap(attacker, child.sprite, this.dashDamageDefender(child))
+      child.collider = collider
+      child.collider.hasActivated = false
+
+      setTimeout(() => { if(!child) return; child.collider.hasActivated = true }, 300)
+    }
+  }
+
+  removeLeftoverColliders(){
+    for (var childIdx = this.children.length - 1; childIdx >= 0; childIdx--) {
+      let child = this.children[childIdx]
+      child.deleteCollider()
+    }
+  }
+
+  dashDamageDefender(childDefender){
+      return function(attacker, defender){
+        if (!childDefender.collider || childDefender.collider.hasActivated) {
+          return;
+        }
+
+        let attackDamage = attacker.stats.attack * constants.dashDamageFactor
+        childDefender.damage(attackDamage)
+        childDefender.collider.hasActivated = true
+        if (!childDefender.isHealthy())
+          attacker.lastKilled = childDefender
+      }
+    }
 }

@@ -56,6 +56,23 @@ export default class Creature{
     this.animateMovement(renderObj);
   }
 
+  damage(attackDamage){
+    if(this.stats.health < 0){
+      return
+    }
+
+    this.stats.health = this.stats.health - attackDamage
+  }
+
+  deleteCollider(){
+    if(!this.collider){
+      return
+    }
+
+    this.collider.destroy()
+    this.collider = null
+  }
+
   animateMovement(renderObj){
     let direction = this.getMovementDirection(renderObj);
     this.sprite.anims.play('zombie-' + direction, true);
@@ -95,6 +112,6 @@ export default class Creature{
   }
 
   isHealthy() {
-    return this.stats.health >= 0;
+    return this.stats.health > 0;
   }
 }
