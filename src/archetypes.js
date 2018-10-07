@@ -26,6 +26,7 @@ export default {
   shooter: {
     // TODO replace this with unique sprites
     color: 0xff0000,
+    name: "Shooter",
     modifiers: {
       health: 0.03,
       speed: 0.06,
@@ -62,6 +63,7 @@ export default {
   },
   dasher: {
     color: 0x00ff00,
+    name: "Dasher",
     modifiers: {
       health: 0.03,
       speed: 0.06,
@@ -70,6 +72,7 @@ export default {
   },
   grenadier: {
     color: 0x0000ff,
+    name: "Grenadier",
     modifiers: {
       health: 0.03,
       speed: 0.06,
@@ -78,6 +81,7 @@ export default {
   },
   kamikaze: {
     color: 0xffff00,
+    name: "Kamikaze",
     modifiers: {
       health: 0.03,
       speed: 0.06,
