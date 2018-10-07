@@ -150,6 +150,7 @@ function updatePlayerForWave(playerData, gamepad, time, delta) {
 function applyArchetypeToPlayer(player, creature) {
   let newStats = scaleStatsToLevel(creature.stats, player.stats.level)
   player.stats = newStats
+  player.archetype = creature.archetype
   player.setTint(creature.archetype.color)
 }
 
@@ -160,7 +161,7 @@ function updateDisplay(player) {
     `Health: ${player.stats.health}/${player.stats.maxHealth}`,
     `Speed: ${player.stats.speed}`,
     `Attack: ${player.stats.attack}`,
-    player.archetype ? `Archetype: ${player.archetype}` : null,
+    player.archetype ? `Archetype: ${player.archetype.name}` : null,
   ]);
 
   if (timer && timer.getProgress() !== 1) {
