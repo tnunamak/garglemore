@@ -87,4 +87,8 @@ export default class Creature{
   getSpeed(){
     return Phaser.Math.Clamp(this.stats.speed, 0.2, 0.6);
   }
+
+  isHealthy() {
+    return this.stats.health >= 0;
+  }
 }
