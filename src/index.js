@@ -112,14 +112,15 @@ function update(time, delta) {
   players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
   // creatures
   if (creatureGroup) {
-    const waveData = creatureGroup.isEveryChildDestroyed();
-    if (!waveData.resetGroup) {
+    const lastDeadChild = creatureGroup.removeDeadChildren()
+    const resetGroup    = creatureGroup.isEveryChildDestroyed();
+    if (! resetGroup) {
       creatureGroup.updateMovement(Array.from(players.values()).map(playerData => playerData.player))
     }
     else {
       console.log(!timer || isTimerComplete())
       if (!timer || isTimerComplete()) {
-        // use last monster data
+        // TODO: use last monster data (lastDeadChild)
 
         // create new wave and replace
         timer = this.time.delayedCall(3000, addNewCreatureGroup, [], this)
@@ -136,11 +137,14 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
 
   if (gamepad.A && !player.dash && player.canDash !== false) {
     movement.updateDashStatus(player, gamepad);
+    if(creatureGroup)
+      creatureGroup.damageByDash(player);
   }
 
   if (player.dash) {
     const DASH_FACTOR = 5
     let { speed, angle } = player.dash
+    
     movement.updateMovement(speed * DASH_FACTOR, angle)
   }
   // abstract out gun cooldown (150)
