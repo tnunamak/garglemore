@@ -1,6 +1,8 @@
 import mechanics from './mechanics'
 
 const SHOOTER_DISTANCE = 300
+const DASHER_DISTANCE = 300
+const DASHER_COOLDOWN = 750
 
 export const closestTarget = (self, enemies) => {
   let closest
@@ -15,6 +17,18 @@ export const closestTarget = (self, enemies) => {
   })
 
   return closest
+}
+
+const chooseMove = (self, enemies, distance) => {
+  const closest = closestTarget(self.sprite, enemies)
+  const closestDistance = Phaser.Math.Distance.Squared(self.sprite.x, self.sprite.y, closest.x, closest.y,)
+  const closeEnough = closestDistance <= (distance * distance)
+
+  const vector = vectorTowards(self.sprite, closest)
+
+  self.animateMovement(closest)
+
+  return closeEnough ? Phaser.Math.Vector2.ZERO : vector
 }
 
 const vectorTowards = (from, to) => new Phaser.Math.Vector2(to.x - from.x, to.y - from.y).normalize()
@@ -39,15 +53,7 @@ export default {
       // Returns a unit vector in the direction movement should occur. Returns
       // the zero vector if movement is not necessary.
       stepToward: (self, enemies) => {
-        const closest = closestTarget(self.sprite, enemies)
-        const closestDistance = Phaser.Math.Distance.Squared(self.sprite.x, self.sprite.y, closest.x, closest.y,)
-        const closeEnough = closestDistance <= (SHOOTER_DISTANCE * SHOOTER_DISTANCE)
-
-        const vector = vectorTowards(self.sprite, closest)
-
-        self.animateMovement(closest)
-
-        return closeEnough ? Phaser.Math.Vector2.ZERO : vector
+        return chooseMove(self, enemies, SHOOTER_DISTANCE)
       },
       attack: (self, enemies) => {
         if (!self.gun) {
@@ -66,6 +72,28 @@ export default {
       health: 0.03,
       speed: 0.06,
       attack: 0.005
+    },
+    ai: {
+      setup: (self, scene) => {
+        self.dashPower = mechanics.getDashPower(self.sprite, DASHER_COOLDOWN)
+        self.scene = scene
+      },
+      stepToward: (self, enemies) => {
+        return chooseMove(self, enemies, DASHER_DISTANCE)
+      },
+      attack: (self, enemies) => {
+        if (self.dashPower.dashActive) {
+          self.dashPower.update()
+        } else {
+          const target = closestTarget(self.sprite, enemies)
+          self.dashPower.start(
+            self.scene,
+            vectorTowards(self.sprite, target).angle(),
+            self,
+            enemies
+          )
+        }
+      }
     }
   },
   grenadier: {
