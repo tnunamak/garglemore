@@ -8,6 +8,7 @@ import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
 import Bullet from './bullet'
+import mechanics from './mechanics'
 
 let creatureGroup;
 let displayStats = [];
@@ -41,6 +42,10 @@ class Main extends Phaser.Scene {
     this.input.gamepad.on('down', function (pad, button, index) {
       if (!players.has(pad)) {
         const joinedPlayerAndMovement = joinPlayer.bind(this)(pad);
+
+        // TODO: Apply this at the right time.
+        joinedPlayerAndMovement.gun = mechanics.getGun(bullets, 50)
+
         const { player } = joinedPlayerAndMovement;
         player.playerNumber = players.size;
         players.set(pad, joinedPlayerAndMovement);
@@ -80,6 +85,8 @@ class Main extends Phaser.Scene {
       maxSize: 100,
       runChildUpdate: true
     })
+
+    this.data.set('bullets', bullets);
   }
 
   update(time, delta) {
@@ -91,7 +98,7 @@ class Main extends Phaser.Scene {
     if (creatureGroup) {
       const waveData = creatureGroup.isEveryChildDestroyed();
       if (!waveData.resetGroup) {
-        creatureGroup.updateMovement(Array.from(players.values()).map(playerData => playerData.player))
+        creatureGroup.update(Array.from(players.values()).map(playerData => playerData.player))
       }
       else {
         console.log(!timer || isTimerComplete())
@@ -110,7 +117,7 @@ function genCreatureStats(level, type) {
   return getStats(level, archetypes[type].modifiers)
 }
 
-function updatePlayer({ player, movement }, gamepad, time, delta) {
+function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
   movement.updateGamepadMovement(gamepad);
 
   // display
@@ -125,16 +132,9 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
     let { speed, angle } = player.dash
     movement.updateMovement(speed * DASH_FACTOR, angle)
   }
-  // abstract out gun cooldown (150)
-  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
-    let bullet = bullets.get()
-    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
 
-    if (bullet) {
-      player.lastFired = time
-      player.lastFireAngle = angle
-      bullet.fire(player.x, player.y, angle)
-    }
+  if (gun && gamepad.R2) {
+    gun.fire(player.x, player.y, gamepad.rightStick.angle())
   }
 }
 
