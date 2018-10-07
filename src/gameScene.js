@@ -118,7 +118,7 @@ class Main extends Phaser.Scene {
 }
 
 function updatePlayer({ player, movement, gun, dashPower }, gamepad, time, delta) {
-  if (player.level > 10) {
+  if (player.stats.level > 16) {
     alert('Congratulations, you made it!')
     this.scene.pause()
     destroyPlayer(this, player)
