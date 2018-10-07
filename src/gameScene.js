@@ -30,12 +30,35 @@ class Main extends Phaser.Scene {
     this.load.spritesheet('dude', 'public/assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('zombie', 'public/assets/zombie.png', { frameWidth: 32, frameHeight: 42 });
     this.load.spritesheet('bullet', 'public/assets/rgblaser.png', { frameWidth: 4, frameHeight: 4 });
+    this.load.audio('theme', [
+      'public/assets/audio/oedipus_wizball_highscore.ogg',
+      'public/assets/audio/oedipus_wizball_highscore.mp3'
+    ]);
+    this.load.image('tile', 'public/assets/images/tile-30x30.png');
   }
 
   create() {
+    const music = this.sound.add('theme');
+    music.play();
+
     this.data.set('players', players);
     const horizontalWalls = this.physics.add.staticGroup();
     const verticalWalls = this.physics.add.staticGroup();
+    const floor = this.add.group();
+    for (let i = 0; i < 44; i++) {
+      for (let j = 0; j < 25; j++) {
+        floor.create(i * 30 + 15, 30 * j + 15, 'tile');
+      }
+    }
+
+    for (let i = 1; i <= 11; i++) {
+      verticalWalls.create(44, i * 60 + 30, 'vertical_wall');
+      verticalWalls.create(1156, i * 60 + 30, 'vertical_wall');
+    }
+    for (let i = 1; i <= 18; i++) {
+      horizontalWalls.create(i * 60 + 30, 76, 'horizontal_wall');
+      horizontalWalls.create(i * 60 + 30, 704, 'horizontal_wall');
+    }
     this.data.set('walls', [horizontalWalls, verticalWalls])
     timerText = this.add.text(640 - 36, 320, '', { font: '96px Courier', fill: '#00ff00' });
 
@@ -59,33 +82,10 @@ class Main extends Phaser.Scene {
         player.playerNumber = players.size;
 
         players.set(pad, joinedPlayerAndMovement);
-        displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
+        displayStats.push(this.add.text(15, 20 * players.size, '', { font: '12px Courier', fill: '#ffff00' }));
         timer = this.time.delayedCall(1400, addNewCreatureGroup, [], this);
       }
     }, this)
-
-    this.input.gamepad.on('down', function (pad, button, index) {
-      if (button.index === 2) {
-        if (!creatureGroup) return;
-        let creatureGroupChildren = creatureGroup.children;
-        let removalIndices = [];
-        for (let [index, child] of creatureGroupChildren.entries()) {
-          removalIndices.push(index);
-        };
-        removalIndices = removalIndices.reverse();
-        removalIndices.forEach(index => {
-          if (creatureGroup.renderGroup[index]) creatureGroupChildren[index].destroy();
-          Phaser.Utils.Array.Remove(creatureGroup.children, creatureGroup.children[index]);
-        })
-      }
-    })
-
-    for (let i = 1; i <= 20; i++) {
-      horizontalWalls.create(i * 60 - 30, 0, 'horizontal_wall');
-      horizontalWalls.create(i * 60 - 30, 780, 'horizontal_wall');
-      verticalWalls.create(0, i * 60 - 30, 'vertical_wall');
-      verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
-    }
 
     // add animations
     addAnimations(this);
@@ -97,7 +97,7 @@ class Main extends Phaser.Scene {
     }
 
     players.forEach((playerData, gamepad) => updatePlayer.bind(this)(playerData, gamepad, time, delta))
-     // Todo IF ALL PLAYERS DEAD, END GAME
+    // Todo IF ALL PLAYERS DEAD, END GAME
     // creatures
     if (creatureGroup) {
       creatureGroup.removeDeadChildren();
@@ -168,8 +168,8 @@ function addNewCreatureGroup(scene = this) {
   const creatureLevel = determineNewMonsterLevel(scene);
 
   for (var i = 0; i < 10; i++) {
-    const x = Phaser.Math.Between(50, 1150);
-    const y = Phaser.Math.Between(50, 730);
+    const x = Phaser.Math.Between(65, 1100);
+    const y = Phaser.Math.Between(90, 685);
 
     let type = Object.keys(archetypes)[Math.floor(Math.random() * Object.keys(archetypes).length)]
     let typeData = archetypes[type]
