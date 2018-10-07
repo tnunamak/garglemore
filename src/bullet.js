@@ -21,7 +21,7 @@ export default new Phaser.Class({
     this.setVisible(true);
     for (var i = 0; i < targetCreatures.length; i++) {
       let creature  = targetCreatures[i];
-      let collider  = this.scene.physics.add.collider(this, creature.sprite, this.bulletHitsCreature(player));
+      let collider  = this.scene.physics.add.collider(this, creature.sprite, this.bulletHitsCreature(player, creature));
     }
   },
 
@@ -37,9 +37,12 @@ export default new Phaser.Class({
     }
   },
 
-  bulletHitsCreature: function (player){
+  bulletHitsCreature: function (player, creature){
     let bullet = this
-    return function(bullet, creature){
+    return function(bullet, creatureSprite){
+      if (bullet.target != "creatures") {
+        return;
+      }
       let attackDamage = player.stats.attack * constants.bulletDamageFactor
       creature.damage(attackDamage)
 
@@ -51,6 +54,9 @@ export default new Phaser.Class({
   bulletHitsPlayer: function (creature){
     let bullet = this
     return function(bullet, player){
+      if (bullet.target != "players") {
+        return;
+      }
       let attackDamage = creature.stats.attack * constants.bulletDamageFactor
       damagePlayer(player, attackDamage)
 
