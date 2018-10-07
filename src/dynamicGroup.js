@@ -22,9 +22,10 @@ export default class DynamicGroup {
     }
 
     this.children.push(child);
-    if (child.isRendered) {
-      this.renderGroup.add(child.sprite, false);
-    }
+  }
+
+  addChildToRenderGroup(child) {
+    this.renderGroup.add(child.sprite, false);
   }
 
   collidesWith(renderGroup) {
@@ -89,8 +90,9 @@ export default class DynamicGroup {
 
     removalIndices = removalIndices.reverse();
     removalIndices.forEach(index => {
-      renderGroupChildren[index].destroy();
-      Phaser.Utils.Array.Remove(this.children, this.children[index]);
+      let child = this.children[index];
+      renderGroupChildren.find(renderChild => renderChild.uniqueId === child.uniqueId).destroy();
+      Phaser.Utils.Array.Remove(this.children, child);
     })
   }
 

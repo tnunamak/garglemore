@@ -17,6 +17,7 @@ export default class Creature{
     this.scale 	= this.getScaleFromStats(stats);
     this.isRendered = false;
     this.initialCoords = { x, y };
+    this.uniqueId = Math.random(); // lolol "unique"
   }
   
   renderSelf() {
@@ -25,6 +26,7 @@ export default class Creature{
     this.sprite.setScale(this.scale);
     this.sprite.setTint(this.tint)
     this.isRendered = true;
+    this.sprite.uniqueId = this.uniqueId;
   }
 
   getScaleFromStats(statVals){
@@ -45,12 +47,14 @@ export default class Creature{
   }
 
   moveInDirection(vector) {
+    if (!this.sprite) return;    
     vector = vector.scale(this.getSpeedInPx())
     this.sprite.setVelocityX(vector.x)
     this.sprite.setVelocityY(vector.y)
   }
 
   moveTowards(renderObj){
+    if (!this.sprite) return;
     let pxSpeed = this.getSpeedInPx();
     this.scene.physics.moveToObject(this.sprite, renderObj, pxSpeed);
     this.animateMovement(renderObj);

@@ -206,6 +206,7 @@ function spawnWavesOfCreatures(creatureGroup) {
       for (let j = 0; j < jlast; j++) {
         const child = Phaser.Utils.Array.RemoveRandomElement(unrenderedChildren);
         child.renderSelf();
+        creatureGroup.addChildToRenderGroup(child)
       }
     }, 4000 * i)
   }
