@@ -1,17 +1,13 @@
 import 'phaser';
 
 import archetypes from './archetypes'
-import getStats from './stats'
+import { scaleStatsToLevel } from './stats'
 import { joinPlayer } from './player/player-create.js'
 import { addAnimations } from './animations.js'
 import Creature from './creature';
 import Cursors from './player/player-movement.js'
 import DynamicGroup from './dynamicGroup';
 import Bullet from './bullet'
-
-function genCreatureStats(level, type) {
-  return getStats(level, archetypes[type].modifiers)
-}
 
 var config = {
   type: Phaser.AUTO,
@@ -112,7 +108,7 @@ function update(time, delta) {
   players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
   // creatures
   if (creatureGroup) {
-    const lastDeadChild = creatureGroup.removeDeadChildren()
+    creatureGroup.removeDeadChildren();
     const resetGroup    = creatureGroup.isEveryChildDestroyed();
     if (! resetGroup) {
       creatureGroup.updateMovement(Array.from(players.values()).map(playerData => playerData.player))
@@ -120,7 +116,7 @@ function update(time, delta) {
     else {
       console.log(!timer || isTimerComplete())
       if (!timer || isTimerComplete()) {
-        // TODO: use last monster data (lastDeadChild)
+        players.forEach((playerData, gamepad) => updatePlayerForWave(playerData, gamepad, time, delta))
 
         // create new wave and replace
         timer = this.time.delayedCall(3000, addNewCreatureGroup, [], this)
@@ -158,6 +154,22 @@ function updatePlayer({ player, movement }, gamepad, time, delta) {
       bullet.fire(player.x, player.y, angle)
     }
   }
+}
+
+function updatePlayerForWave(playerData, gamepad, time, delta){
+  let player = playerData.player 
+  console.log(player)
+  if(! player.lastKilled)
+    return;
+
+  player.stats.level += 1
+  applyArchetypeToPlayer(player, player.lastKilled);
+}
+
+function applyArchetypeToPlayer(player, creature){
+  let newStats = scaleStatsToLevel(creature.stats, player.stats.level)
+  player.stats = newStats
+  player.setTint(creature.archetype.color)
 }
 
 function updateDisplay(player) {

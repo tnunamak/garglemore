@@ -106,6 +106,6 @@ export default class Creature{
   }
 
   isHealthy() {
-    return this.stats.health >= 0;
+    return this.stats.health > 0;
   }
 }

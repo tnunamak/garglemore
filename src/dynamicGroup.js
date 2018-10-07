@@ -56,7 +56,6 @@ export default class DynamicGroup {
   }
 
   removeDeadChildren(){
-    let lastDeadChild;
     let renderGroupChildren = this.renderGroup.getChildren()
     let removalIndices = [];
     for (let [index, child] of this.children.entries()) {
@@ -67,12 +66,9 @@ export default class DynamicGroup {
 
     removalIndices = removalIndices.reverse();
     removalIndices.forEach(index => {
-      lastDeadChild = Object.assign(renderGroupChildren[index]);
       renderGroupChildren[index].destroy();
       Phaser.Utils.Array.Remove(this.children, this.children[index]);
     })
-
-    return lastDeadChild
   }
 
   damageByDash(attacker){
@@ -93,15 +89,17 @@ export default class DynamicGroup {
     }
   }
 
-  dashDamageDefender(child){
+  dashDamageDefender(childDefender){
       return function(attacker, defender){
-        if (!child.collider || child.collider.hasActivated) {
+        if (!childDefender.collider || childDefender.collider.hasActivated) {
           return;
         }
 
         let attackDamage = attacker.stats.attack * constants.dashDamageFactor
-        child.damage(attackDamage)
-        child.collider.hasActivated = true
+        childDefender.damage(attackDamage)
+        childDefender.collider.hasActivated = true
+        if (!childDefender.isHealthy())
+          attacker.lastKilled = childDefender
       }
     }
 }
