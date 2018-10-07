@@ -38,6 +38,9 @@ let creatureGroup;
 let displayStats = [];
 let bullets;
 let players = new Map();
+let timer;
+let timerText;
+
 let game = new Phaser.Game(config);
 
 function preload() {
@@ -55,6 +58,7 @@ function create() {
     const horizontalWalls = this.physics.add.staticGroup();
     const verticalWalls = this.physics.add.staticGroup();
     this.data.set('walls', [horizontalWalls, verticalWalls])
+    timerText = this.add.text(640-36, 320, '', { font: '96px Courier', fill: '#00ff00' });
 
     // player join listener
     this.input.gamepad.on('down', function (pad, button, index) {
@@ -64,7 +68,7 @@ function create() {
             player.playerNumber = players.size;
             players.set(pad, joinedPlayerAndMovement);
             displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-            addNewCreatureGroup(this);
+            timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this);
         }
     }, this)
 
@@ -108,50 +112,66 @@ function update(time, delta) {
     players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
 }
 
-function updatePlayer({ player, movement }, gamepad, time, delta) {
-  movement.updateGamepadMovement(gamepad);
-  creatureGroup.moveTowards(player);
+function updatePlayer({ player, movement }, gamepad, time, delta, scene) {
+    movement.updateGamepadMovement(gamepad);
 
-  //display
-  displayStats[player.playerNumber].setText([
-    `Player ${player.playerNumber}`,
-    `Level: ${player.stats.level - 5}`,
-    `Health: ${player.stats.health}/${player.stats.maxHealth}`,
-    `Speed: ${player.stats.speed}`,
-    `Attack: ${player.stats.attack}`,
-    player.archetype ? `Archetype: ${player.archetype}` : null,
-  ]);
+    // creatures
+    if (creatureGroup) {
+        const waveData = creatureGroup.isEveryChildDestroyed();
+        if (!waveData.resetGroup) {
+            creatureGroup.moveTowards(player);
+        }
+        else {
+            // use last monster data
 
-  if (gamepad.A && !player.dash && player.canDash !== false) {
-    player.body.checkCollision.none = true
-    player.dash = movement.getGamepadMovement(gamepad)
-    player.canDash = false
-    setTimeout(() => {
-      delete player.dash
-      player.body.checkCollision.none = false
-    }, 64)
-    setTimeout(() => player.canDash = true, 300)
-  }
-
-  if (player.dash) {
-    const DASH_FACTOR = 5
-    let { speed, angle } = player.dash
-    movement.updateMovement(speed * DASH_FACTOR, angle)
-  }
-  // abstract out gun cooldown (150)
-  if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
-    let bullet = bullets.get()
-    let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
-
-    if (bullet) {
-      player.lastFired = time
-      player.lastFireAngle = angle
-      bullet.fire(player.x, player.y, angle)
+            // create new wave and replace
+            addNewCreatureGroup(scene);
+        }
     }
-  }
+
+    // display
+    updateDisplay(player);
+
+    if (gamepad.A && !player.dash && player.canDash !== false) {
+        movement.dashUpdate(player, gamepad);
+    }
+
+    if (player.dash) {
+        const DASH_FACTOR = 5
+        let { speed, angle } = player.dash
+        movement.updateMovement(speed * DASH_FACTOR, angle)
+    }
+    // abstract out gun cooldown (150)
+    if (gamepad.R2 && time > (player.lastFired || 0) + 50) {
+        let bullet = bullets.get()
+        let angle = (gamepad.rightStick.x === 0 && gamepad.rightStick.y === 0 && player.lastFireAngle) ? player.lastFireAngle : gamepad.rightStick.angle()
+
+        if (bullet) {
+            player.lastFired = time
+            player.lastFireAngle = angle
+            bullet.fire(player.x, player.y, angle)
+        }
+    }
 }
 
-function addNewCreatureGroup(scene) {
+function updateDisplay(player) {
+    displayStats[player.playerNumber].setText([
+        `Player ${player.playerNumber}`,
+        `Level: ${player.stats.level - 5}`,
+        `Health: ${player.stats.health}/${player.stats.maxHealth}`,
+        `Speed: ${player.stats.speed}`,
+        `Attack: ${player.stats.attack}`,
+        player.archetype ? `Archetype: ${player.archetype}` : null,
+    ]);
+
+    if (timer && timer.getProgress() !== 1) {
+        timerText.setText((timer.getProgress() * 4).toString().substr(0, 1));
+    } else {
+        timerText.setText('');
+    }
+}
+
+function addNewCreatureGroup(scene = this) {
     let creatures = [];
 
     for (var i = 0; i < 10; i++) {
