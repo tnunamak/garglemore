@@ -135,7 +135,7 @@ function updatePlayer({ player, movement, gun, dashPower }, gamepad, time, delta
 
   movementFromInput && movement.updateGamepadMovement(gamepad);
 
-  if (gun && gamepad.R2) {
+  if (gun && gamepad.R2 && creatureGroup) {
     gun.fireAtCreatures(player, creatureGroup.children, gamepad.rightStick.angle())
   }
 }

@@ -21,7 +21,7 @@ export default new Phaser.Class({
     this.setVisible(true);
     for (var i = 0; i < targetCreatures.length; i++) {
       let creature  = targetCreatures[i];
-      let collider  = this.scene.physics.add.collider(this, creature, this.bulletHitsCreature(player));
+      let collider  = this.scene.physics.add.collider(this, creature.sprite, this.bulletHitsCreature(player));
     }
   },
 
