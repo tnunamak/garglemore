@@ -10,15 +10,15 @@ export function updatePlayerStats(player){
 }
 
 export function damagePlayer (player, attackDamage) {
-    if(player.stats.health < 0){
-      return
-    }
+  if(player.stats.health < 0){
+    return
+  }
 
-    player.stats.health = player.stats.health - attackDamage
+  player.stats.health = Math.round(player.stats.health - attackDamage)
 }
 
 export function isPlayerDead (player){
-	return player.stats.health <= 0;
+  return player.stats.health <= 0;
 }
 
 function applyArchetypeToPlayer(player, creature) {

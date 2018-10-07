@@ -118,8 +118,10 @@ class Main extends Phaser.Scene {
 }
 
 function updatePlayer({ player, movement, gun, dashPower }, gamepad, time, delta) {
-  if (isPlayerDead(player)) {
+  if(player.active !== false && isPlayerDead(player)) {
+    this.scene.pause()
     destroyPlayer(this, player)
+    return;
   }
 
   updateDisplay(player);
