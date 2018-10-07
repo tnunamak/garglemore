@@ -77,13 +77,16 @@ export default {
     },
     ai: {
       setup: (self, scene) => {
-        self.dashPower = mechanics.getDashPower(self.sprite, DASHER_COOLDOWN)
         self.scene = scene
       },
       stepToward: (self, enemies) => {
         return chooseMove(self, enemies, DASHER_DISTANCE)
       },
       attack: (self, enemies) => {
+        if (!self.dashPower) {
+          self.dashPower = mechanics.getDashPower(self.sprite, DASHER_COOLDOWN)
+        }
+
         if (self.dashPower.dashActive) {
           self.dashPower.update()
         } else {
