@@ -178,8 +178,8 @@ function addNewCreatureGroup(scene = this) {
   let creatures = [];
 
   for (var i = 0; i < 10; i++) {
-    const x = Phaser.Math.Between(50, 1150);
-    const y = Phaser.Math.Between(50, 730);
+    const x = Phaser.Math.Between(65, 1100);
+    const y = Phaser.Math.Between(90, 685);
 
     let type = Object.keys(archetypes)[Math.floor(Math.random() * Object.keys(archetypes).length)]
     let typeData = archetypes[type]
