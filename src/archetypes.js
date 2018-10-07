@@ -100,7 +100,7 @@ export default {
       }
     }
   },
-  grenadier: {
+/*  grenadier: {
     color: 0xffff00,
     name: "Laserbeast",
     modifiers: {
@@ -108,5 +108,5 @@ export default {
       speed: 0.06,
       attack: 0.005
     }
-  }
+  }*/
 }
