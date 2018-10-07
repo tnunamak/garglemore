@@ -1,7 +1,7 @@
 import 'phaser';
 
 import archetypes from './archetypes'
-import getStats from './stats'
+import { scaleStatsToLevel } from './stats'
 import { joinPlayer } from './player/player-create.js'
 import { addAnimations } from './animations.js'
 import Creature from './creature';
@@ -96,14 +96,14 @@ class Main extends Phaser.Scene {
     players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
     // creatures
     if (creatureGroup) {
-      const waveData = creatureGroup.isEveryChildDestroyed();
-      if (!waveData.resetGroup) {
+      creatureGroup.removeDeadChildren();
+      const resetGroup = creatureGroup.isEveryChildDestroyed();
+      if (!resetGroup) {
         creatureGroup.update(Array.from(players.values()).map(playerData => playerData.player))
       }
       else {
-        console.log(!timer || isTimerComplete())
         if (!timer || isTimerComplete()) {
-          // use last monster data
+          players.forEach((playerData, gamepad) => updatePlayerForWave(playerData, gamepad, time, delta))
 
           // create new wave and replace
           timer = this.time.delayedCall(3000, addNewCreatureGroup, [], this)
@@ -111,10 +111,6 @@ class Main extends Phaser.Scene {
       }
     }
   }
-}
-
-function genCreatureStats(level, type) {
-  return getStats(level, archetypes[type].modifiers)
 }
 
 function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
@@ -125,17 +121,36 @@ function updatePlayer({ player, movement, gun }, gamepad, time, delta) {
 
   if (gamepad.A && !player.dash && player.canDash !== false) {
     movement.updateDashStatus(player, gamepad);
+    if (creatureGroup) {
+      creatureGroup.damageByDash(player);
+    }
   }
 
   if (player.dash) {
     const DASH_FACTOR = 5
     let { speed, angle } = player.dash
+
     movement.updateMovement(speed * DASH_FACTOR, angle)
   }
 
   if (gun && gamepad.R2) {
     gun.fire(player.x, player.y, gamepad.rightStick.angle())
   }
+}
+
+function updatePlayerForWave(playerData, gamepad, time, delta) {
+  let player = playerData.player
+  console.log(player)
+  if(! player.lastKilled)
+    return;
+  player.stats.level += 1
+  applyArchetypeToPlayer(player, player.lastKilled);
+}
+
+function applyArchetypeToPlayer(player, creature) {
+  let newStats = scaleStatsToLevel(creature.stats, player.stats.level)
+  player.stats = newStats
+  player.setTint(creature.archetype.color)
 }
 
 function updateDisplay(player) {

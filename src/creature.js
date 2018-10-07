@@ -13,10 +13,10 @@ export default class Creature{
     this.archetype = archetypes[type]
     let tint = this.archetype.color
 
-    this.scene 	= scene;
+    this.scene  = scene;
     this.sprite = scene.physics.add.sprite(x, y, 'zombie');
-    this.stats 	= stats;
-    this.scale 	= this.getScaleFromStats(stats);
+    this.stats  = stats;
+    this.scale  = this.getScaleFromStats(stats);
     this.sprite.setScale(this.scale);
     this.sprite.setTint(tint)
   }
@@ -48,6 +48,23 @@ export default class Creature{
     let pxSpeed = this.getSpeedInPx();
     this.scene.physics.moveToObject(this.sprite, renderObj, pxSpeed);
     this.animateMovement(renderObj);
+  }
+
+  damage(attackDamage){
+    if(this.stats.health < 0){
+      return
+    }
+
+    this.stats.health = this.stats.health - attackDamage
+  }
+
+  deleteCollider(){
+    if(!this.collider){
+      return
+    }
+
+    this.collider.destroy()
+    this.collider = null
   }
 
   animateMovement(renderObj){
@@ -89,6 +106,6 @@ export default class Creature{
   }
 
   isHealthy() {
-    return this.stats.health >= 0;
+    return this.stats.health > 0;
   }
 }

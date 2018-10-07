@@ -61,12 +61,10 @@ export default class playerMovement {
   }
 
   updateDashStatus (player, gamepad) {
-    player.body.checkCollision.none = true
     player.dash = this.getGamepadMovement(gamepad)
     player.canDash = false
     setTimeout(() => {
       delete player.dash
-      player.body.checkCollision.none = false
     }, 64)
     setTimeout(() => player.canDash = true, 300)
   }

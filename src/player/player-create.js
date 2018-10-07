@@ -26,10 +26,9 @@ export function createPlayer (scene, type = 'shooter') {
 };
 
 export function updatePlayer (player, level, type) {
-  const archetype = archetypes[type]
-  player.stats = getStats(level, archetype.modifiers)
-  player.stats.maxHealth = player.stats.health;
-  player.stats.level = level;
+  const archetype   = archetypes[type]
+  player.stats      = getStats(level, archetype.modifiers)
+  player.archetype  = archetype
   player.setTint(archetype.color)
 
   return player

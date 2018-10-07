@@ -20,4 +20,4 @@ var config = {
   scene: [welcomeScene, gameScene]
 };
 
-let game = new Phaser.Game(config);
+new Phaser.Game(config);
