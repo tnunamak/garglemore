@@ -50,7 +50,7 @@ class Main extends Phaser.Scene {
         player.playerNumber = players.size;
         players.set(pad, joinedPlayerAndMovement);
         displayStats.push(this.add.text(50, 60 * players.size, '', { font: '12px Courier', fill: '#00ff00' }));
-        timer = this.time.delayedCall(0, addNewCreatureGroup, [], this);
+        timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this);
       }
     }, this)
 
@@ -106,7 +106,7 @@ class Main extends Phaser.Scene {
           players.forEach((playerData, gamepad) => updatePlayerForWave(playerData, gamepad, time, delta))
 
           // create new wave and replace
-          timer = this.time.delayedCall(2000, addNewCreatureGroup, [], this)
+          timer = this.time.delayedCall(4000, addNewCreatureGroup, [], this)
         }
       }
     }
@@ -165,7 +165,7 @@ function updateDisplay(player) {
   ]);
 
   if (timer && timer.getProgress() !== 1) {
-    timerText.setText((timer.getProgress() * 3).toString().substr(0, 1));
+    timerText.setText((timer.getProgress() * 4).toString().substr(0, 1));
   } else {
     timerText.setText('');
   }
