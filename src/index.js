@@ -95,6 +95,9 @@ function create() {
     verticalWalls.create(1200, i * 60 - 30, 'vertical_wall');
   }
 
+  // add animations
+  addAnimations(this);
+
   bullets = this.add.group({
     classType: Bullet,
     maxSize: 100,
@@ -181,9 +184,9 @@ function addNewCreatureGroup(scene = this) {
     let typeData = archetypes[type]
 
     // TODO update level based on wave, etc.
-    let stats = genCreatureStats(1, type)
+    let stats = genCreatureStats(1, type);
 
-    creatures.push(new Creature(this, x, y, stats, typeData.color));
+    creatures.push(new Creature(scene, x, y, stats, typeData.color));
   }
 
   creatureGroup = new DynamicGroup(scene, creatures);
