@@ -109,12 +109,11 @@ function update(time, delta) {
     if (!players.size) {
         return
     }
-    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta))
+    players.forEach((playerData, gamepad) => updatePlayer(playerData, gamepad, time, delta, this))
 }
 
 function updatePlayer({ player, movement }, gamepad, time, delta, scene) {
     movement.updateGamepadMovement(gamepad);
-
     // creatures
     if (creatureGroup) {
         const waveData = creatureGroup.isEveryChildDestroyed();
@@ -122,10 +121,13 @@ function updatePlayer({ player, movement }, gamepad, time, delta, scene) {
             creatureGroup.moveTowards(player);
         }
         else {
-            // use last monster data
+            console.log(!timer || isTimerComplete())
+            if (!timer || isTimerComplete()){
+                // use last monster data
 
-            // create new wave and replace
-            addNewCreatureGroup(scene);
+                // create new wave and replace
+                timer = scene.time.delayedCall(5000, addNewCreatureGroup, [], scene)
+            }
         }
     }
 
@@ -133,7 +135,7 @@ function updatePlayer({ player, movement }, gamepad, time, delta, scene) {
     updateDisplay(player);
 
     if (gamepad.A && !player.dash && player.canDash !== false) {
-        movement.dashUpdate(player, gamepad);
+        movement.updateDashStatus(player, gamepad);
     }
 
     if (player.dash) {
@@ -165,7 +167,7 @@ function updateDisplay(player) {
     ]);
 
     if (timer && timer.getProgress() !== 1) {
-        timerText.setText((timer.getProgress() * 4).toString().substr(0, 1));
+        timerText.setText((timer.getProgress() * 5).toString().substr(0, 1));
     } else {
         timerText.setText('');
     }
@@ -190,4 +192,10 @@ function addNewCreatureGroup(scene = this) {
     creatureGroup = new DynamicGroup(scene, creatures);
     scene.data.get('walls').forEach(wall => creatureGroup.collidesWith(wall));
     scene.data.get('players').forEach(player => creatureGroup.collidesWith(player));
+    
+    timer = undefined;
+}
+
+function isTimerComplete () {
+    return timer.getProgress() === 1;
 }
