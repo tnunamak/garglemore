@@ -9,7 +9,7 @@ class Welcome extends Phaser.Scene {
 
   preload ()
   {
-    this.load.image('instructions', 'public/assets/images/Introscreen.png')
+    this.load.image('instructions', 'public/assets/images/introscreen.png')
   }
 
   create ()
