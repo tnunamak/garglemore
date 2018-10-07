@@ -135,7 +135,7 @@ function updatePlayer({ player, movement, gun, dashPower }, gamepad, time, delta
 
 function updatePlayerForWave(playerData, gamepad, time, delta) {
   let player = playerData.player
-  if(! player.lastKilled)
+  if (!player.lastKilled)
     return;
   player.stats.level += 1
   applyArchetypeToPlayer(player, player.lastKilled);
@@ -167,6 +167,7 @@ function updateDisplay(player) {
 
 function addNewCreatureGroup(scene = this) {
   let creatures = [];
+  const creatureLevel = determineNewMonsterLevel(scene);
 
   for (var i = 0; i < 10; i++) {
     const x = Phaser.Math.Between(50, 1150);
@@ -176,7 +177,7 @@ function addNewCreatureGroup(scene = this) {
     let typeData = archetypes[type]
 
     // TODO update level based on wave, etc.
-    creatures.push(new Creature(scene, x, y, 1, type));
+    creatures.push(new Creature(scene, x, y, creatureLevel, type));
   }
 
   creatureGroup = new DynamicGroup(scene, creatures);
@@ -187,11 +188,23 @@ function addNewCreatureGroup(scene = this) {
   timer = undefined;
 }
 
+function determineNewMonsterLevel(scene) {
+  let players = scene.data.get('players');
+  let level = 1;
+  players.forEach((player) => {
+    const { stats } = player.player;
+    if (stats.level > level) level = stats.level;
+  });
+
+  const addToLevel = Phaser.Utils.Array.RemoveRandomElement([1, 2, 3]);
+  return level + addToLevel;
+}
+
 function spawnWavesOfCreatures(creatureGroup) {
   const batchCount = 3;
   // array[Math.floor(Math.random() * array.length)]
   const totalLength = creatureGroup.children.filter((child) => !child.isRendered).length;
-  for(let i = 0; i < batchCount; i++) {
+  for (let i = 0; i < batchCount; i++) {
     setTimeout(() => {
       // get all unrendered children
       let unrenderedChildren = creatureGroup.children.filter((child) => !child.isRendered);
