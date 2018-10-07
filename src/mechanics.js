@@ -35,7 +35,7 @@ class Gun extends Behavior {
     this.bullets = bullets
   }
 
-  fire (x, y, angle) {
+  fireAtCreatures (player, creatures, angle) {
     if (!this.tryAction()) {
       return
     }
@@ -45,7 +45,7 @@ class Gun extends Behavior {
     if (bullet) {
       let newAngle = angle ? angle : this.lastFireAngle
       this.lastFireAngle = newAngle
-      bullet.fire(x, y, newAngle)
+      bullet.fireAtCreatures(player, creatures, newAngle)
     }
   }
 
@@ -60,7 +60,7 @@ class Gun extends Behavior {
       this.lastFired = now
       let newAngle = angle ? angle : this.lastFireAngle
       this.lastFireAngle = newAngle
-      bullet.fireAtPlayers(creature, newAngle, playerSprites)
+      bullet.fireAtPlayers(creature, playerSprites, newAngle)
     }
   }
 }

@@ -13,15 +13,19 @@ export default new Phaser.Class({
     scene.physics.add.existing(this)
   },
 
-  fire: function (x, y, angle) {
+  fireAtCreatures: function (player, targetCreatures, angle) {
     this.angle = angle;
-    this.setPosition(x, y);
+    this.setPosition(player.x, player.y);
 
     this.setActive(true);
     this.setVisible(true);
+    for (var i = 0; i < targetCreatures.length; i++) {
+      let creature  = targetCreatures[i];
+      let collider  = this.scene.physics.add.collider(this, creature, this.bulletHitsCreature(player));
+    }
   },
 
-  fireAtPlayers: function (creature, angle, targetSprites) {
+  fireAtPlayers: function (creature, targetSprites, angle) {
     this.angle = angle;
     this.setPosition(creature.sprite.x, creature.sprite.y);
 
@@ -31,6 +35,17 @@ export default new Phaser.Class({
       let playerSprite = targetSprites[i];
       let collider  = this.scene.physics.add.collider(this, playerSprite, this.bulletHitsPlayer(creature));
     }
+  },
+
+  bulletHitsCreature: function (player){
+    let bullet = this
+    return function(bullet, creature){
+      let attackDamage = player.stats.attack * constants.bulletDamageFactor
+      creature.damage(attackDamage)
+
+      bullet.setActive(false);
+      bullet.setVisible(false);
+    } 
   },
 
   bulletHitsPlayer: function (creature){
