@@ -3,7 +3,10 @@ import archetypes from './archetypes'
 import getStats from './stats'
 
 function genCreatureStats(level, type) {
-  return getStats(level, archetypes[type].modifiers)
+  let stats =  getStats(level, archetypes[type].modifiers)
+  stats.health = stats.health / 2;
+  stats.attack = stats.attack / 2;
+  return stats;
 }
 
 export default class Creature{

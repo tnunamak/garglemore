@@ -201,8 +201,8 @@ function determineNewMonsterLevel(scene) {
     if (stats.level > level) level = stats.level;
   });
 
-  const addToLevel = Phaser.Utils.Array.RemoveRandomElement([0, 1, 2]);
-  return level + addToLevel;
+  //const addToLevel = Phaser.Utils.Array.RemoveRandomElement([0, 1, 2]);
+  return Math.round(level / 2);
 }
 
 function spawnWavesOfCreatures(creatureGroup) {
